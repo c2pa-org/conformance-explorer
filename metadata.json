@@ -1,0 +1,5 @@
+{
+  "name": "C2PA Conformance Explorer (from base)",
+  "description": "Browse and filter the official list of C2PA conforming products, C2PA trust list certificates, and C2PA TSA trust list certificates. Search by vendor, product type, assurance level, and supported file formats.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,32 @@
+{
+  "name": "c2pa-conformance-explorer-(from-base)",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ng serve",
+    "build": "ng build",
+    "preview": "ng serve --configuration=production"
+  },
+  "dependencies": {
+    "@angular/build": "^20.3.0",
+    "@angular/cli": "^20.3.0",
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/compiler-cli": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.4",
+    "@angular/platform-browser": "^20.3.0",
+    "@ng-icons/core": "^32.2.0",
+    "@ng-icons/heroicons": "^32.2.0",
+    "rxjs": "^7.8.2",
+    "tailwindcss": "latest"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.3.7",
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "zone.js": "^0.15.1"
+  }
+}
