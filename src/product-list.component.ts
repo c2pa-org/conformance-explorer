@@ -159,6 +159,17 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   </div>
   <!-- Filters Section -->
   <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="mb-4">
+        <label for="product-search" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Search</label>
+        <input 
+          type="text"
+          id="product-search"
+          placeholder="Search anything..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchTermChange($event)"
+          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+        />
+      </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Filter by Vendor -->
       <div>
@@ -173,18 +184,6 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             <option [value]="vendor">{{ vendor }}</option>
           }
         </select>
-      </div>
-      <!-- Search Input -->
-      <div>
-        <label for="product-search" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Search</label>
-        <input 
-          type="text"
-          id="product-search"
-          placeholder="Product, vendor, or Record ID..."
-          [ngModel]="searchTerm()"
-          (ngModelChange)="onSearchTermChange($event)"
-          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-        />
       </div>
       <!-- Filter by Product Type -->
       <div>
@@ -470,11 +469,12 @@ export class ProductListComponent {
       
       const formatsMatch = formats.size === 0 || p.supportedFileFormats.some(f => formats.has(f));
 
-      const searchTermMatch = term === '' ||
-        p.productName.toLowerCase().includes(term) ||
-        p.vendorName.toLowerCase().includes(term) ||
-        p.organizationalUnit.toLowerCase().includes(term) ||
-        p.recordId.toLowerCase().includes(term);
+      const searchTermMatch = term === '' || 
+        Object.values(p).some(val => 
+          typeof val === 'string' && val.toLowerCase().includes(term)
+        ) ||
+        p.supportedMediaTypes.some(type => type.toLowerCase().includes(term)) ||
+        p.supportedFileFormats.some(format => format.toLowerCase().includes(term));
 
       return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch;
     });
