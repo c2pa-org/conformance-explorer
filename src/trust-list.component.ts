@@ -7,18 +7,6 @@ import { Certificate } from './models/certificate.model';
 @Component({
   selector: 'app-trust-list',
   template: `<div class="space-y-6">
-  <!-- Data Source Link -->
-  <div class="text-left text-sm text-slate-500 dark:text-slate-400">
-    Retrieved from the
-    <a 
-      href="https://github.com/c2pa-org/conformance-public/blob/main/trust-list/C2PA-TRUST-LIST.pem" 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      class="font-medium underline hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-      C2PA <code class="font-mono">conformance-public</code> repository
-    </a>.
-  </div>
-
   <!-- Filter Section -->
   <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
