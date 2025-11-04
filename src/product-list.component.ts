@@ -10,134 +10,19 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 
 @Component({
   selector: 'app-product-list',
-  template: `<!-- Details Modal -->
-@if (selectedProduct()) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-      <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedProduct()?.vendorName }}</h3>
-        <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedProduct()?.productName }}</p>
-        @if (selectedProduct()?.organizationalUnit) {
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedProduct()?.organizationalUnit }}</p>
-        }
-        <div class="mt-2">
-          <span
-            class="text-xs font-semibold px-2 py-1 rounded-full"
-            [ngClass]="{
-              'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': selectedProduct()?.status === 'conformant',
-              'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': selectedProduct()?.status === 'revoked',
-              'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': selectedProduct()?.status !== 'conformant' && selectedProduct()?.status !== 'revoked'
-            }">
-            {{ formatStatus(selectedProduct()?.status ?? '') }}
-          </span>
-        </div>
-        <button (click)="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-      <div class="p-6 space-y-4">
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Product Information</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Product Type</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.productType }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Spec Version(s)</dt>
-            <dd class="text-slate-800 dark:text-slate-200"><span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium px-2 py-1 rounded-md">{{ selectedProduct()?.specVersions.join(', ') }}</span></dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Assurance Level</dt>
-            <dd class="text-slate-800 dark:text-slate-200">
-              @if (selectedProduct()?.assuranceLevelValue; as level) {
-                <div class="flex items-center gap-2">
-                  <div class="flex items-center gap-1">
-                    @for (i of [1, 2, 3, 4]; track i) {
-                      <span class="h-2 w-2 rounded-full"
-                            [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
-                    }
-                  </div>
-                  <span>{{ selectedProduct()?.assuranceLevel }}</span>
-                </div>
-              } @else {
-                <span>{{ selectedProduct()?.assuranceLevel }}</span>
-              }
-            </dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Min. Version</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.productVersion }}</dd>
-          </dl>
-        </div>
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Supported Media Types & Formats</h4>
-          <div class="flex flex-col md:flex-row gap-4">
-            <!-- Generation Box -->
-            <div class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div class="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
-                <ng-icon name="heroCog" class="text-slate-400 dark:text-slate-500"></ng-icon>
-                <h5>Generation</h5>
-              </div>
-              @if (selectedProduct()?.generationMediaTypes && selectedProduct()?.generationMediaTypes.length > 0) {
-                <div class="space-y-3 pt-1">
-                  @for (mediaType of selectedProduct()?.generationMediaTypes; track mediaType) {
-                    <div>
-                      <p class="font-medium text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
-                      <div class="flex flex-wrap gap-2 mt-1">
-                        @for(format of selectedProduct()?.generationFormats[mediaType]; track format) {
-                          <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-mono font-medium px-2 py-1 rounded-full">{{ format }}</span>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="text-sm text-slate-500 dark:text-slate-400">None supported for Generation.</p>
-              }
-            </div>
-
-            <!-- Validation Box -->
-            <div class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div class="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
-                <ng-icon name="heroCheckCircle" class="text-slate-400 dark:text-slate-500"></ng-icon>
-                <h5>Validation</h5>
-              </div>
-              @if (selectedProduct()?.validationMediaTypes && selectedProduct()?.validationMediaTypes.length > 0) {
-                <div class="space-y-3 pt-1">
-                  @for (mediaType of selectedProduct()?.validationMediaTypes; track mediaType) {
-                    <div>
-                      <p class="font-medium text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
-                      <div class="flex flex-wrap gap-2 mt-1">
-                        @for(format of selectedProduct()?.validationFormats[mediaType]; track format) {
-                          <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-mono font-medium px-2 py-1 rounded-full">{{ format }}</span>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="text-sm text-slate-500 dark:text-slate-400">None supported for Validation.</p>
-              }
-            </div>
-          </div>
-        </div>
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Record Information</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Record ID</dt>
-            <dd class="text-slate-800 dark:text-slate-200 font-mono break-words">{{ selectedProduct()?.recordId }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Creation Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.creationDate | date:'fullDate' }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Conformance Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.conformanceDate | date:'fullDate' }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Last Modified Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.lastModification | date:'fullDate' }}</dd>
-          </dl>
-        </div>
-      </div>
-      <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-right rounded-b-lg sticky bottom-0">
-        <button (click)="closeModal()" class="bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">
-          Close
-        </button>
-      </div>
-    </div>
+  template: `<div class="space-y-6">
+  <!-- Data Source Link -->
+  <div class="text-left text-sm text-slate-500 dark:text-slate-400 mb-4">
+    Retrieved from the
+    <a 
+      href="https://github.com/c2pa-org/conformance-public/blob/main/conforming-products/conforming-products-list.json" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      class="font-medium underline hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+      C2PA <code class="font-mono">conformance-public</code> repository
+    </a>.
   </div>
-}
-<div class="space-y-6">
+
   <!-- Cr Pin Disclaimer -->
   <div class="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex items-center gap-4">
     <div class="flex-shrink-0">
