@@ -83,6 +83,7 @@ import { TsaTrustListComponent } from './tsa-trust-list.component';
         </div>
     </div>
     <p class="text-slate-600 dark:text-slate-400 text-lg">Browse, search, and filter the live versions of the C2PA Conforming Products List, C2PA Trust List, and C2PA TSA Trust List</p>
+    <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">Learn more about the C2PA Conformance Program at <a href="https://c2pa.org/conformance" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">c2pa.org/conformance</a></p>
   </header>
 
   <!-- Tabs Navigation -->
