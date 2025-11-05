@@ -147,6 +147,19 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
                     </div>
                   </div>
                 </div>
+
+                <!-- Key Details -->
+                <div class="space-y-2">
+                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Key Details</h5>
+                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono"><strong>Key Algorithm:</strong> {{ decoded.keyDetails.keyAlgorithm }}</p>
+                    </div>
+                    <div>
+                      <p class="font-mono"><strong>Signature Algorithm:</strong> {{ decoded.keyDetails.signatureAlgorithm }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             }
           </div>
@@ -269,6 +282,20 @@ export class TsaTrustListComponent {
     try {
       const cert = new X509Certificate(pem);
 
+      const cryptoKey = await cert.publicKey.export();
+
+      const keyAlgorithm = cryptoKey.algorithm;
+
+      let keyAlgorithmString = 'N/A';
+      if (keyAlgorithm.name.toUpperCase().includes('RSA')) {
+        keyAlgorithmString = `${keyAlgorithm.name} ${(keyAlgorithm as any).modulusLength} bits`;
+      } else if (keyAlgorithm.name.toUpperCase().includes('EC')) {
+        keyAlgorithmString = `${keyAlgorithm.name} ${(keyAlgorithm as any).namedCurve}`;
+      }
+
+      const signatureAlgorithm = cert.signatureAlgorithm;
+      const signatureAlgorithmString = `${signatureAlgorithm.name} with ${signatureAlgorithm.hash.name}`;
+
       const subjectKeyIdentifierExt = cert.extensions.find(ext => ext instanceof SubjectKeyIdentifierExtension) as SubjectKeyIdentifierExtension | undefined;
       const subjectKeyIdentifier = subjectKeyIdentifierExt ? this.arrayBufferToHex(subjectKeyIdentifierExt.value) : 'N/A';
 
@@ -291,6 +318,10 @@ export class TsaTrustListComponent {
         validity: {
           notBefore: cert.notBefore,
           notAfter: cert.notAfter,
+        },
+        keyDetails: {
+          keyAlgorithm: keyAlgorithmString,
+          signatureAlgorithm: signatureAlgorithmString,
         },
       });
     } catch (error) {
