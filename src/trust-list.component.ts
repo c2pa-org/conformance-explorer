@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TrustListService } from './services/trust-list.service';
 import { Certificate } from './models/certificate.model';
+import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierExtension } from '@peculiar/x509';
 
 @Component({
   selector: 'app-trust-list',
@@ -80,7 +81,7 @@ import { Certificate } from './models/certificate.model';
 @if (selectedCertificate()) {
   @let cert = selectedCertificate()!;
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
       <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
         <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ cert.commonName }}</h3>
         <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ cert.organization }}</p>
@@ -93,14 +94,89 @@ import { Certificate } from './models/certificate.model';
           <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Full Subject</h4>
           <p class="text-sm text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 p-3 rounded-md font-mono break-all">{{ cert.subject }}</p>
         </div>
-        <div>
-          <div class="flex justify-between items-center mb-2">
-            <h4 class="font-semibold text-slate-700 dark:text-slate-200">PEM Certificate</h4>
-            <button (click)="copyPem(cert.pem)" class="text-sm bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 font-semibold py-1 px-3 rounded-md transition-colors">
-              Copy
-            </button>
+
+        <!-- Decoded Certificate Details -->
+        @if (decodedCertificate()) {
+          @let decoded = decodedCertificate()!;
+          <div class="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-4">
+            <h4 class="font-semibold text-slate-700 dark:text-slate-200">Decoded Certificate Details</h4>
+            
+            @if (decoded.error) {
+              <p class="text-red-500">{{ decoded.error }}</p>
+            } @else {
+              <div class="space-y-4 text-sm">
+                <!-- Subject Information -->
+                <div class="space-y-2">
+                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Subject Information</h5>
+                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono break-all"><strong>Subject:</strong> {{ decoded.subject }}</p>
+                    </div>
+                    <div>
+                      <p class="font-mono break-all"><strong>Subject Key Identifier:</strong> {{ decoded.subjectKeyIdentifier }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Issuer Information -->
+                <div class="space-y-2">
+                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Issuer Information</h5>
+                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono break-all"><strong>Issuer:</strong> {{ decoded.issuer }}</p>
+                    </div>
+                    <div>
+                      <p class="font-mono break-all"><strong>Authority Key Identifier:</strong> {{ decoded.authorityKeyIdentifier }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Certificate Details -->
+                <div class="space-y-2">
+                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Certificate Details</h5>
+                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono break-all"><strong>Serial Number:</strong> {{ decoded.serialNumber }}</p>
+                    </div>
+                    <div>
+                      <p class="font-mono"><strong>Validity:</strong><br>
+                        Not Before: {{ decoded.validity.notBefore | date:'medium' }}<br>
+                        Not After: {{ decoded.validity.notAfter | date:'medium' }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fingerprints -->
+                <div class="space-y-2">
+                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Fingerprints</h5>
+                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono break-all"><strong>SHA-1:</strong> {{ decoded.fingerprints.sha1 }}</p>
+                    </div>
+                    <div>
+                      <p class="font-mono break-all"><strong>SHA-256:</strong> {{ decoded.fingerprints.sha256 }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
+        }
+
+        <div>
+          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">PEM Certificate</h4>
           <pre class="text-xs text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 p-3 rounded-md overflow-x-auto"><code>{{ cert.pem }}</code></pre>
+          <div class="flex justify-end items-center mt-2">
+            <div class="flex gap-2">
+              <button (click)="decodeCertificate(cert.pem)" class="text-sm bg-blue-100 dark:bg-blue-800/50 hover:bg-blue-200 dark:hover:bg-blue-700/50 text-blue-700 dark:text-blue-300 font-semibold py-1 px-3 rounded-md transition-colors">
+                Decode Certificate
+              </button>
+              <button (click)="copyPem(cert.pem)" class="text-sm bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 font-semibold py-1 px-3 rounded-md transition-colors">
+                Copy
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-right rounded-b-lg sticky bottom-0">
@@ -122,6 +198,7 @@ export class TrustListComponent {
   selectedOrganization = signal('');
   searchTerm = signal('');
   selectedCertificate = signal<Certificate | null>(null);
+  decodedCertificate = signal<any | null>(null);
 
   organizations = computed(() => {
     const orgs = this.certificates().map(c => c.organization);
@@ -159,13 +236,55 @@ export class TrustListComponent {
 
   selectCertificate(certificate: Certificate): void {
     this.selectedCertificate.set(certificate);
+    this.decodedCertificate.set(null);
   }
 
   closeModal(): void {
     this.selectedCertificate.set(null);
+    this.decodedCertificate.set(null);
   }
 
   copyPem(pem: string): void {
     navigator.clipboard.writeText(pem).catch(err => console.error('Failed to copy PEM:', err));
+  }
+
+  private arrayBufferToHex(buffer: ArrayBuffer): string {
+    return Array.from(new Uint8Array(buffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  async decodeCertificate(pem: string) {
+    try {
+      const cert = new X509Certificate(pem);
+
+      const subjectKeyIdentifierExt = cert.extensions.find(ext => ext instanceof SubjectKeyIdentifierExtension) as SubjectKeyIdentifierExtension | undefined;
+      const subjectKeyIdentifier = subjectKeyIdentifierExt ? this.arrayBufferToHex(subjectKeyIdentifierExt.value) : 'N/A';
+
+      const authorityKeyIdentifierExt = cert.extensions.find(ext => ext instanceof AuthorityKeyIdentifierExtension) as AuthorityKeyIdentifierExtension | undefined;
+      const authorityKeyIdentifier = authorityKeyIdentifierExt ? this.arrayBufferToHex(authorityKeyIdentifierExt.value) : 'N/A';
+
+      const sha1Thumbprint = await cert.getThumbprint('SHA-1');
+      const sha256Thumbprint = await cert.getThumbprint('SHA-256');
+
+      this.decodedCertificate.set({
+        subject: cert.subject,
+        issuer: cert.issuer,
+        serialNumber: cert.serialNumber,
+        subjectKeyIdentifier,
+        authorityKeyIdentifier,
+        fingerprints: {
+          sha1: this.arrayBufferToHex(sha1Thumbprint),
+          sha256: this.arrayBufferToHex(sha256Thumbprint),
+        },
+        validity: {
+          notBefore: cert.notBefore,
+          notAfter: cert.notAfter,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to decode certificate:', error);
+      this.decodedCertificate.set({ error: 'Failed to decode certificate.' });
+    }
   }
 }
