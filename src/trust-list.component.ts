@@ -93,7 +93,7 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
         <!-- Decoded Certificate Details -->
         @if (decodedCertificate()) {
           @let decoded = decodedCertificate()!;
-          <div class="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-4">
+          <div class="space-y-4">
             <h4 class="font-semibold text-slate-700 dark:text-slate-200">Decoded Certificate Details</h4>
             
             @if (decoded.error) {
@@ -243,6 +243,25 @@ export class TrustListComponent {
       .join('');
   }
 
+  private reorderDn(dn: string): string {
+    const parts = dn.split(',').map(s => s.trim());
+    const order = ['CN', 'O', 'OU'];
+    const ordered: (string | undefined)[] = new Array(order.length);
+    const remaining: string[] = [];
+
+    for (const p of parts) {
+        const key = p.split('=')[0];
+        const index = order.indexOf(key);
+        if (index !== -1) {
+            ordered[index] = p;
+        } else {
+            remaining.push(p);
+        }
+    }
+
+    return ordered.filter(Boolean).concat(remaining).join(', ');
+  }
+
   async decodeCertificate(pem: string) {
     try {
       const cert = new X509Certificate(pem);
@@ -257,8 +276,8 @@ export class TrustListComponent {
       const sha256Thumbprint = await cert.getThumbprint('SHA-256');
 
       this.decodedCertificate.set({
-        subject: cert.subject,
-        issuer: cert.issuer,
+        subject: this.reorderDn(cert.subject),
+        issuer: this.reorderDn(cert.issuer),
         serialNumber: cert.serialNumber,
         subjectKeyIdentifier,
         authorityKeyIdentifier,
