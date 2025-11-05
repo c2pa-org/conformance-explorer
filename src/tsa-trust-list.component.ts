@@ -90,11 +90,6 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
         </button>
       </div>
       <div class="p-6 space-y-4 overflow-y-auto">
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Full Subject</h4>
-          <p class="text-sm text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 p-3 rounded-md font-mono break-all">{{ cert.subject }}</p>
-        </div>
-
         <!-- Decoded Certificate Details -->
         @if (decodedCertificate()) {
           @let decoded = decodedCertificate()!;
@@ -144,13 +139,9 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
                         Not After: {{ decoded.validity.notAfter | date:'medium' }}
                       </p>
                     </div>
-                  </div>
-                </div>
-
-                <!-- Fingerprints -->
-                <div class="space-y-2">
-                  <h5 class="font-semibold text-slate-600 dark:text-slate-300">Fingerprints</h5>
-                  <div class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md space-y-2">
+                    <div>
+                      <p class="font-mono"><strong>Fingerprints:</strong></p>
+                    </div>
                     <div>
                       <p class="font-mono break-all"><strong>SHA-1:</strong> {{ decoded.fingerprints.sha1 }}</p>
                     </div>
@@ -169,9 +160,6 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
           <pre class="text-xs text-slate-800 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 p-3 rounded-md overflow-x-auto"><code>{{ cert.pem }}</code></pre>
           <div class="flex justify-end items-center mt-2">
             <div class="flex gap-2">
-              <button (click)="decodeCertificate(cert.pem)" class="text-sm bg-blue-100 dark:bg-blue-800/50 hover:bg-blue-200 dark:hover:bg-blue-700/50 text-blue-700 dark:text-blue-300 font-semibold py-1 px-3 rounded-md transition-colors">
-                Decode Certificate
-              </button>
               <button (click)="copyPem(cert.pem)" class="text-sm bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 font-semibold py-1 px-3 rounded-md transition-colors">
                 Copy
               </button>
@@ -237,6 +225,7 @@ export class TsaTrustListComponent {
   selectCertificate(certificate: Certificate): void {
     this.selectedCertificate.set(certificate);
     this.decodedCertificate.set(null);
+    this.decodeCertificate(certificate.pem);
   }
 
   closeModal(): void {

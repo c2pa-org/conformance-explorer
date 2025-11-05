@@ -1,8 +1,9 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, shareReplay } from 'rxjs/operators';
 import { Certificate } from '../models/certificate.model';
+import { X509Certificate } from '@peculiar/x509';
 
 @Injectable({
   providedIn: 'root',
@@ -20,39 +21,36 @@ export class TsaTrustListService {
 
   private parsePemFile(text: string): Certificate[] {
     const certificates: Certificate[] = [];
-    // Split by the end delimiter and filter out any empty strings
     const certBlocks = text.split('-----END CERTIFICATE-----').filter(block => block.trim() !== '');
 
     certBlocks.forEach((block, index) => {
       const trimmedBlock = block.trim();
-      // The subject line is everything before the BEGIN delimiter
       const parts = trimmedBlock.split('-----BEGIN CERTIFICATE-----');
-      if (parts.length < 2) return; // Malformed block
+      if (parts.length < 2) return;
 
-      const subjectLine = parts[0].trim();
       const pemBody = `-----BEGIN CERTIFICATE-----\n${parts[1].trim()}\n-----END CERTIFICATE-----`;
 
-      const organization = this.extractSubjectPart(subjectLine, 'O');
-      const commonName = this.extractSubjectPart(subjectLine, 'CN');
+      try {
+        const cert = new X509Certificate(pemBody);
+        const subject = cert.subject;
+        const organizationField = cert.subjectName.getField('O');
+        const commonNameField = cert.subjectName.getField('CN');
 
-      if (subjectLine) {
+        const organization = Array.isArray(organizationField) ? organizationField[0] : organizationField;
+        const commonName = Array.isArray(commonNameField) ? commonNameField[0] : commonNameField;
+
         certificates.push({
           id: index,
-          subject: subjectLine,
-          organization: organization,
-          commonName: commonName,
+          subject: subject,
+          organization: organization || 'N/A',
+          commonName: commonName || 'N/A',
           pem: pemBody
         });
+      } catch (error) {
+        console.error('Failed to parse certificate:', error);
       }
     });
 
     return certificates;
-  }
-
-  private extractSubjectPart(subject: string, part: 'O' | 'CN'): string {
-    // Regex to find 'O=' or 'CN=' followed by anything until a comma or end of string
-    const regex = new RegExp(`${part}=([^,]+)`);
-    const match = subject.match(regex);
-    return match ? match[1].trim() : 'N/A';
   }
 }
