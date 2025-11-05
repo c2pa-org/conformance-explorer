@@ -38,7 +38,20 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
         />
       </div>
     </div>
-    <div class="text-sm text-slate-600 dark:text-slate-400 text-right mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+    <!-- Reset Button -->
+    <div class="mt-4 flex justify-end">
+        <button 
+          (click)="resetFilters()"
+          class="w-full sm:w-auto bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 text-sm disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 disabled:cursor-not-allowed"
+          [disabled]="!isAnyFilterActive()">
+          Reset Filters
+        </button>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="flex justify-start items-center my-4">
+    <div class="text-sm text-slate-600 dark:text-slate-400">
       Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredCertificates().length }}</span> of <span class="font-semibold text-slate-700 dark:text-slate-200">{{ certificates().length }}</span> certificates.
     </div>
   </div>
@@ -223,6 +236,11 @@ export class TsaTrustListComponent {
 
     return filtered;
   });
+
+  isAnyFilterActive = computed(() => {
+    return this.selectedOrganization() !== '' ||
+           this.searchTerm() !== '';
+  });
   
   onOrganizationChange(org: string): void {
     this.selectedOrganization.set(org);
@@ -230,6 +248,11 @@ export class TsaTrustListComponent {
 
   onSearchTermChange(term: string): void {
     this.searchTerm.set(term);
+  }
+
+  resetFilters(): void {
+    this.selectedOrganization.set('');
+    this.searchTerm.set('');
   }
 
   selectCertificate(certificate: Certificate): void {
