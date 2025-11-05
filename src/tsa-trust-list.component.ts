@@ -68,7 +68,7 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
   <div class="text-center text-sm text-slate-500 dark:text-slate-400 mt-8">
     Retrieved from the
     <a 
-      href="https://github.com/c2pa-org/conformance-public/blob/main/trust-list/C2PA-TSA-TRUST-LIST.pem" 
+      href="https://github.com/c2pa-org/conformance-public/blob/main/trust-list/C2PA-TSA-TRUST-LIST.pem"
       target="_blank" 
       rel="noopener noreferrer" 
       class="font-medium underline hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
@@ -244,13 +244,19 @@ export class TsaTrustListComponent {
   }
 
   private reorderDn(dn: string): string {
-    const parts = dn.split(',').map(s => s.trim());
+    const commaPlaceholder = '##COMMA##';
+    const parts = dn.replace(/\\,/g, commaPlaceholder).split(',').map(p => p.trim().replace(new RegExp(commaPlaceholder, 'g'), ','));
     const order = ['CN', 'O', 'OU'];
     const ordered: (string | undefined)[] = new Array(order.length);
     const remaining: string[] = [];
 
     for (const p of parts) {
-        const key = p.split('=')[0];
+        const firstEqual = p.indexOf('=');
+        if (firstEqual === -1) {
+            remaining.push(p);
+            continue;
+        }
+        const key = p.substring(0, firstEqual);
         const index = order.indexOf(key);
         if (index !== -1) {
             ordered[index] = p;
