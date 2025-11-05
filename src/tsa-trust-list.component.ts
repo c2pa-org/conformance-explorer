@@ -135,18 +135,15 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
                     </div>
                     <div>
                       <p class="font-mono"><strong>Validity:</strong><br>
-                        Not Before: {{ decoded.validity.notBefore | date:'medium' }}<br>
-                        Not After: {{ decoded.validity.notAfter | date:'medium' }}
+                        <strong>Not Before:</strong> {{ decoded.validity.notBefore | date:'medium' }}<br>
+                        <strong>Not After:</strong> {{ decoded.validity.notAfter | date:'medium' }}
                       </p>
                     </div>
                     <div>
-                      <p class="font-mono"><strong>Fingerprints:</strong></p>
-                    </div>
-                    <div>
-                      <p class="font-mono break-all"><strong>SHA-1:</strong> {{ decoded.fingerprints.sha1 }}</p>
-                    </div>
-                    <div>
-                      <p class="font-mono break-all"><strong>SHA-256:</strong> {{ decoded.fingerprints.sha256 }}</p>
+                      <p class="font-mono"><strong>Fingerprints:</strong><br>
+                        <strong>SHA-1:</strong> {{ decoded.fingerprints.sha1 }}<br>
+                        <strong>SHA-256:</strong> {{ decoded.fingerprints.sha256 }}
+                      </p>
                     </div>
                   </div>
                 </div>
