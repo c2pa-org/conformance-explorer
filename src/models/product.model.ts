@@ -3,6 +3,7 @@ export interface Product {
   vendorName: string;
   productName: string;
   organizationalUnit: string;
+  distinguishedName: string;
   productVersion: string;
   productType: string;
   assuranceLevel: string;
@@ -18,6 +19,19 @@ export interface Product {
   specVersions: string[];
   status: string;
   lastModification: string;
+  assuranceLevelValue: number | null;
+}
+
+export interface GroupedProduct {
+  distinguishedName: string;
+  vendorName: string;
+  productName: string;
+  organizationalUnit: string;
+  records: Product[];
+  latestConformanceDate: string;
+  statuses: string[];
+  productTypes: string[];
+  assuranceLevel: string;
   assuranceLevelValue: number | null;
 }
 
