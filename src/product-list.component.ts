@@ -2,135 +2,161 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon, NgIconComponent, provideIcons } from '@ng-icons/core';
-import { heroInformationCircle, heroCog, heroCheckCircle } from '@ng-icons/heroicons/outline';
+import { heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack } from '@ng-icons/heroicons/outline';
 import { DataService } from './services/data.service';
-import { Product } from './models/product.model';
+import { Product, GroupedProduct } from './models/product.model';
 
 type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc' | 'creationDateAsc';
 
 @Component({
   selector: 'app-product-list',
   template: `<!-- Details Modal -->
-@if (selectedProduct()) {
+@if (selectedGroup()) {
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-      <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedProduct()?.vendorName }}</h3>
-        <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedProduct()?.productName }}</p>
-        @if (selectedProduct()?.organizationalUnit) {
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedProduct()?.organizationalUnit }}</p>
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
+        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
+        <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
+        @if (selectedGroup()?.organizationalUnit) {
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
         }
-        <div class="mt-2">
-          <span
-            class="text-xs font-semibold px-2 py-1 rounded-full"
-            [ngClass]="{
-              'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': selectedProduct()?.status === 'conformant',
-              'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': selectedProduct()?.status === 'revoked',
-              'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': selectedProduct()?.status !== 'conformant' && selectedProduct()?.status !== 'revoked'
-            }">
-            {{ formatStatus(selectedProduct()?.status ?? '') }}
-          </span>
+        <div class="mt-2 flex items-center gap-2">
+            <span class="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded">{{ selectedGroup()?.distinguishedName }}</span>
         </div>
         <button (click)="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <div class="p-6 space-y-4">
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Product Information</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Product Type</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.productType }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Spec Version(s)</dt>
-            <dd class="text-slate-800 dark:text-slate-200"><span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium px-2 py-1 rounded-md">{{ selectedProduct()?.specVersions.join(', ') }}</span></dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Assurance Level</dt>
-            <dd class="text-slate-800 dark:text-slate-200">
-              @if (selectedProduct()?.assuranceLevelValue; as level) {
-                <div class="flex items-center gap-2">
-                  <div class="flex items-center gap-1">
-                    @for (i of [1, 2, 3, 4]; track i) {
-                      <span class="h-2 w-2 rounded-full"
-                            [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
+      
+      <div class="flex-grow overflow-y-auto p-6 space-y-8">
+        @for (product of selectedGroup()?.records; track product.recordId) {
+          <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4">
+              <div class="flex flex-col">
+                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Record ID</span>
+                <span class="text-sm font-mono text-slate-700 dark:text-slate-300">{{ product.recordId }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-xs font-semibold px-2 py-1 rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': product.status === 'conformant',
+                    'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': product.status === 'revoked',
+                    'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': product.status !== 'conformant' && product.status !== 'revoked'
+                  }">
+                  {{ formatStatus(product.status) }}
+                </span>
+                <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-md">{{ product.productType }}</span>
+              </div>
+            </div>
+            
+            <div class="p-4 space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Version & Specs</h5>
+                  <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
+                    </div>
+                  </dl>
+                </div>
+                
+                <div>
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Assurance</h5>
+                  <div class="flex items-center gap-2">
+                    @if (product.assuranceLevelValue; as level) {
+                      <div class="flex items-center gap-1">
+                        @for (i of [1, 2, 3, 4]; track i) {
+                          <span class="h-2 w-2 rounded-full"
+                                [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
+                        }
+                      </div>
+                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
+                    } @else {
+                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
                     }
                   </div>
-                  <span>{{ selectedProduct()?.assuranceLevel }}</span>
                 </div>
-              } @else {
-                <span>{{ selectedProduct()?.assuranceLevel }}</span>
-              }
-            </dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Min. Version</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.productVersion }}</dd>
-          </dl>
-        </div>
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Supported Media Types & Formats</h4>
-          <div class="flex flex-col md:flex-row gap-4">
-            <!-- Generation Box -->
-            <div class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div class="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
-                <ng-icon name="heroCog" class="text-slate-400 dark:text-slate-500"></ng-icon>
-                <h5>Generation</h5>
-              </div>
-              @if (selectedProduct()?.generationMediaTypes && selectedProduct()?.generationMediaTypes.length > 0) {
-                <div class="space-y-3 pt-1">
-                  @for (mediaType of selectedProduct()?.generationMediaTypes; track mediaType) {
-                    <div>
-                      <p class="font-medium text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
-                      <div class="flex flex-wrap gap-2 mt-1">
-                        @for(format of selectedProduct()?.generationFormats[mediaType]; track format) {
-                          <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-mono font-medium px-2 py-1 rounded-full">{{ format }}</span>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="text-sm text-slate-500 dark:text-slate-400">None supported for Generation.</p>
-              }
-            </div>
 
-            <!-- Validation Box -->
-            <div class="flex-1 bg-slate-100 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div class="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
-                <ng-icon name="heroCheckCircle" class="text-slate-400 dark:text-slate-500"></ng-icon>
-                <h5>Validation</h5>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Dates</h5>
+                  <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Conformance:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceDate | date:'shortDate' }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Created:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.creationDate | date:'shortDate' }}</dd>
+                    </div>
+                  </dl>
+                </div>
               </div>
-              @if (selectedProduct()?.validationMediaTypes && selectedProduct()?.validationMediaTypes.length > 0) {
-                <div class="space-y-3 pt-1">
-                  @for (mediaType of selectedProduct()?.validationMediaTypes; track mediaType) {
-                    <div>
-                      <p class="font-medium text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
-                      <div class="flex flex-wrap gap-2 mt-1">
-                        @for(format of selectedProduct()?.validationFormats[mediaType]; track format) {
-                          <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-mono font-medium px-2 py-1 rounded-full">{{ format }}</span>
+
+              <div>
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Media Types & Formats</h5>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Generation Box -->
+                  <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
+                      <ng-icon name="heroCog" class="text-slate-400"></ng-icon>
+                      <span>Generation</span>
+                    </div>
+                    @if (product.generationMediaTypes && product.generationMediaTypes.length > 0) {
+                      <div class="space-y-3">
+                        @for (mediaType of product.generationMediaTypes; track mediaType) {
+                          <div>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <div class="flex flex-wrap gap-1.5 mt-1">
+                              @for(format of product.generationFormats[mediaType]; track format) {
+                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ format }}</span>
+                              }
+                            </div>
+                          </div>
                         }
                       </div>
+                    } @else {
+                      <p class="text-[10px] text-slate-400 dark:text-slate-500 italic text-center py-2">No generation support</p>
+                    }
+                  </div>
+
+                  <!-- Validation Box -->
+                  <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
+                      <ng-icon name="heroCheckCircle" class="text-slate-400"></ng-icon>
+                      <span>Validation</span>
                     </div>
-                  }
+                    @if (product.validationMediaTypes && product.validationMediaTypes.length > 0) {
+                      <div class="space-y-3">
+                        @for (mediaType of product.validationMediaTypes; track mediaType) {
+                          <div>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <div class="flex flex-wrap gap-1.5 mt-1">
+                              @for(format of product.validationFormats[mediaType]; track format) {
+                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ format }}</span>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-[10px] text-slate-400 dark:text-slate-500 italic text-center py-2">No validation support</p>
+                    }
+                  </div>
                 </div>
-              } @else {
-                <p class="text-sm text-slate-500 dark:text-slate-400">None supported for Validation.</p>
-              }
+              </div>
             </div>
           </div>
-        </div>
-        <div>
-          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-2">Record Information</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Record ID</dt>
-            <dd class="text-slate-800 dark:text-slate-200 font-mono break-words">{{ selectedProduct()?.recordId }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Creation Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.creationDate | date:'fullDate' }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Conformance Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.conformanceDate | date:'fullDate' }}</dd>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Last Modified Date</dt>
-            <dd class="text-slate-800 dark:text-slate-200">{{ selectedProduct()?.lastModification | date:'fullDate' }}</dd>
-          </dl>
-        </div>
+        }
       </div>
-      <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-right rounded-b-lg sticky bottom-0">
-        <button (click)="closeModal()" class="bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">
+
+      <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-right rounded-b-lg sticky bottom-0 z-10">
+        <button (click)="closeModal()" class="bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-6 rounded-md shadow-sm transition-colors duration-200">
           Close
         </button>
       </div>
@@ -280,7 +306,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   <!-- Results Count & Sorting -->
   <div class="flex justify-between items-center my-4">
     <div class="text-sm text-slate-600 dark:text-slate-400">
-      Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredProducts().length }}</span> of <span class="font-semibold text-slate-700 dark:text-slate-200">{{ products().length }}</span> products.
+      Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ groupedProducts().length }}</span> products (from <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredProducts().length }}</span> matching records).
     </div>
     <div class="flex items-center">
         <label for="sort-order" class="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2 whitespace-nowrap">Sort results by</label>
@@ -300,33 +326,45 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 
   <!-- Results Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    @for (product of filteredProducts(); track product.recordId) {
-      <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-shadow duration-200" [attr.data-record-id]="product.recordId">
+    @for (group of groupedProducts(); track group.distinguishedName) {
+      <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-shadow duration-200">
         <div class="flex-grow">
-          <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">{{ product.productName }}</h2>
-          <p class="text-slate-600 dark:text-slate-300 font-medium">{{ product.vendorName }}</p>
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ product.organizationalUnit }}</p>
-          <div class="mt-2">
-            <span
-              class="text-xs font-semibold px-2 py-1 rounded-full"
-              [ngClass]="{
-                'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': product.status === 'conformant',
-                'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': product.status === 'revoked',
-                'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': product.status !== 'conformant' && product.status !== 'revoked'
-              }">
-              {{ formatStatus(product.status) }}
-            </span>
+          <div class="flex justify-between items-start gap-4">
+            <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ group.productName }}</h2>
+            @if (group.records.length > 1) {
+              <div class="flex items-center whitespace-nowrap shrink-0 gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-1 rounded-full border border-blue-100 dark:border-blue-800/50">
+                <ng-icon name="heroSquare2Stack"></ng-icon>
+                <span>{{ group.records.length }} RECORDS</span>
+              </div>
+            }
+          </div>
+          <p class="text-slate-600 dark:text-slate-300 font-medium mt-1">{{ group.vendorName }}</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.organizationalUnit }}</p>
+          
+          <div class="mt-3 flex flex-wrap gap-2">
+            @for (status of group.statuses; track status) {
+              <span
+                class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                [ngClass]="{
+                  'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200': status === 'conformant',
+                  'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200': status === 'revoked',
+                  'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': status !== 'conformant' && status !== 'revoked'
+                }">
+                {{ formatStatus(status) }}
+              </span>
+            }
           </div>
         </div>
+        
         <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-2 text-sm">
-          <div class="flex justify-between">
-            <span class="font-semibold text-slate-600 dark:text-slate-300">Product Type:</span>
-            <span class="text-slate-700 dark:text-slate-200">{{ product.productType }}</span>
+          <div class="flex justify-between items-center">
+            <span class="font-semibold text-slate-600 dark:text-slate-300">Type(s):</span>
+            <span class="text-slate-700 dark:text-slate-200 text-xs">{{ group.productTypes.join(', ') }}</span>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between items-center">
             <span class="font-semibold text-slate-600 dark:text-slate-300">Assurance:</span>
             <div class="flex items-center gap-2">
-              @if (product.assuranceLevelValue; as level) {
+              @if (group.assuranceLevelValue; as level) {
                 <div class="flex items-center gap-1">
                   @for (i of [1, 2, 3, 4]; track i) {
                     <span class="h-2 w-2 rounded-full"
@@ -334,16 +372,17 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                   }
                 </div>
               }
-              <span class="text-slate-700 dark:text-slate-200">{{ product.assuranceLevel }}</span>
+              <span class="text-slate-700 dark:text-slate-200 text-xs">{{ group.assuranceLevel }}</span>
             </div>
           </div>
-          <div class="flex justify-between">
-            <span class="font-semibold text-slate-600 dark:text-slate-300">Conformance:</span>
-            <span class="text-slate-700 dark:text-slate-200">{{ product.conformanceDate | date:'longDate' }}</span>
+          <div class="flex justify-between items-center">
+            <span class="font-semibold text-slate-600 dark:text-slate-300">Latest Conformance:</span>
+            <span class="text-slate-700 dark:text-slate-200 text-xs">{{ group.latestConformanceDate | date:'longDate' }}</span>
           </div>
         </div>
+        
         <div class="mt-4">
-          <button (click)="selectProduct(product)" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-md transition-colors duration-200">
+          <button (click)="selectGroup(group)" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-md transition-colors duration-200">
             View Details
           </button>
         </div>
@@ -370,7 +409,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, FormsModule, NgIconComponent, NgIcon],
-  providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle })],
+  providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack })],
 })
 export class ProductListComponent {
   private dataService = inject(DataService);
@@ -389,7 +428,7 @@ export class ProductListComponent {
   selectedStatus = signal('');
 
   // Modal signal
-  selectedProduct = signal<Product | null>(null);
+  selectedGroup = signal<GroupedProduct | null>(null);
 
   // This effect clears the file format selections when no media types are selected.
   private clearFormatsEffect = effect(() => {
@@ -496,6 +535,36 @@ export class ProductListComponent {
     });
   });
 
+  groupedProducts = computed(() => {
+    const products = this.filteredProducts();
+    const groups = new Map<string, Product[]>();
+    
+    products.forEach(p => {
+      const dn = p.distinguishedName;
+      if (!groups.has(dn)) {
+        groups.set(dn, []);
+      }
+      groups.get(dn)!.push(p);
+    });
+    
+    return Array.from(groups.entries()).map(([dn, records]) => {
+      // Sort records by conformanceDate (newest first)
+      records.sort((a, b) => new Date(b.conformanceDate).getTime() - new Date(a.conformanceDate).getTime());
+      const first = records[0];
+      return {
+        distinguishedName: dn,
+        vendorName: first.vendorName,
+        productName: first.productName,
+        organizationalUnit: first.organizationalUnit,
+        records: records,
+        latestConformanceDate: first.conformanceDate, // The first record is now the latest due to sorting
+        statuses: [...new Set(records.map(p => p.status))],
+        productTypes: [...new Set(records.map(p => p.productType))],
+        assuranceLevel: first.assuranceLevel,
+        assuranceLevelValue: first.assuranceLevelValue,
+      } as GroupedProduct;
+    });  });
+
   isAnyFilterActive = computed(() => {
     return this.selectedVendor() !== '' || 
            this.selectedProductType() !== '' || 
@@ -583,12 +652,12 @@ export class ProductListComponent {
   }
 
   // Modal logic
-  selectProduct(product: Product): void {
-    this.selectedProduct.set(product);
+  selectGroup(group: GroupedProduct): void {
+    this.selectedGroup.set(group);
   }
 
   closeModal(): void {
-    this.selectedProduct.set(null);
+    this.selectedGroup.set(null);
   }
 
   getAssuranceDotClass(level: number, index: number): string {

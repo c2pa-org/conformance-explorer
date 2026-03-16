@@ -75,11 +75,20 @@ export class DataService {
       };
       const friendlyProductType = productTypeMap[p.product.productType] ?? p.product.productType;
       
+      const dnParts = [
+        `CN=${p.product.DN.CN}`,
+        p.product.DN.OU ? `OU=${p.product.DN.OU}` : '',
+        `O=${p.product.DN.O}`,
+        `C=${p.product.DN.C}`
+      ].filter(Boolean);
+      const distinguishedName = dnParts.join(', ');
+
       return {
         recordId: p.recordId,
         vendorName: p.applicant,
         productName: p.product.DN.CN,
         organizationalUnit: p.product.DN.OU || '',
+        distinguishedName: distinguishedName,
         productVersion: p.product.minVersion || 'N/A',
         productType: friendlyProductType,
         assuranceLevel: assuranceLevel,
