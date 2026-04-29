@@ -432,6 +432,11 @@ export class ProductListComponent {
 
   private platformId = inject(PLATFORM_ID);
 
+  // URL DN filter signals
+  urlCn = signal('');
+  urlO = signal('');
+  urlC = signal('');
+
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -439,6 +444,15 @@ export class ProductListComponent {
       if (query) {
         this.searchTerm.set(query);
       }
+      
+      const cn = urlParams.get('cn');
+      if (cn) this.urlCn.set(cn.toLowerCase());
+
+      const o = urlParams.get('o');
+      if (o) this.urlO.set(o.toLowerCase());
+
+      const c = urlParams.get('c');
+      if (c) this.urlC.set(c.toLowerCase());
     }
   }
 
@@ -510,6 +524,11 @@ export class ProductListComponent {
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
 
+    // Get DN filters
+    const cnFilter = this.urlCn();
+    const oFilter = this.urlO();
+    const cFilter = this.urlC();
+
     const filtered = this.products().filter(p => {
       const vendorMatch = vendor === '' || p.vendorName === vendor;
       const productTypeMatch = type === '' || p.productType === type;
@@ -527,7 +546,13 @@ export class ProductListComponent {
         p.supportedMediaTypes.some(type => type.toLowerCase().includes(term)) ||
         p.supportedFileFormats.some(format => format.toLowerCase().includes(term));
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch;
+      // DN filters matching
+      const dn = p.distinguishedName.toLowerCase();
+      const cnMatch = !cnFilter || dn.includes(`cn=${cnFilter}`) || dn.includes(`cn = ${cnFilter}`);
+      const oMatch = !oFilter || dn.includes(`o=${oFilter}`) || dn.includes(`o = ${oFilter}`);
+      const cMatch = !cFilter || dn.includes(`c=${cFilter}`) || dn.includes(`c = ${cFilter}`);
+
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch && cnMatch && oMatch && cMatch;
     });
 
     // Sort the filtered results
