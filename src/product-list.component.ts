@@ -436,22 +436,30 @@ export class ProductListComponent {
   urlCn = signal('');
   urlO = signal('');
   urlC = signal('');
+  urlOu = signal('');
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const query = urlParams.get('q');
-      if (query) {
-        this.searchTerm.set(query);
-      }
+      // Use a robust URL parsing method that checks the full href
+      const url = new URL(window.location.href);
+      // Check standard search params first, fallback to hash params if present
+      const getParam = (key: string) => {
+        return url.searchParams.get(key) || new URLSearchParams(url.hash.split('?')[1] || '').get(key);
+      };
+
+      const query = getParam('q');
+      if (query) this.searchTerm.set(query);
       
-      const cn = urlParams.get('cn');
+      const cn = getParam('cn');
       if (cn) this.urlCn.set(cn.toLowerCase());
 
-      const o = urlParams.get('o');
+      const o = getParam('o');
       if (o) this.urlO.set(o.toLowerCase());
 
-      const c = urlParams.get('c');
+      const ou = getParam('ou');
+      if (ou) this.urlOu.set(ou.toLowerCase());
+
+      const c = getParam('c');
       if (c) this.urlC.set(c.toLowerCase());
     }
   }
@@ -527,6 +535,7 @@ export class ProductListComponent {
     // Get DN filters
     const cnFilter = this.urlCn();
     const oFilter = this.urlO();
+    const ouFilter = this.urlOu();
     const cFilter = this.urlC();
 
     const filtered = this.products().filter(p => {
@@ -546,13 +555,15 @@ export class ProductListComponent {
         p.supportedMediaTypes.some(type => type.toLowerCase().includes(term)) ||
         p.supportedFileFormats.some(format => format.toLowerCase().includes(term));
 
-      // DN filters matching
-      const dn = p.distinguishedName.toLowerCase();
-      const cnMatch = !cnFilter || dn.includes(`cn=${cnFilter}`) || dn.includes(`cn = ${cnFilter}`);
-      const oMatch = !oFilter || dn.includes(`o=${oFilter}`) || dn.includes(`o = ${oFilter}`);
-      const cMatch = !cFilter || dn.includes(`c=${cFilter}`) || dn.includes(`c = ${cFilter}`);
+      // DN filters matching (CN maps to productName, O maps to vendorName, OU maps to organizationalUnit)
+      const cnMatch = !cnFilter || p.productName.toLowerCase().includes(cnFilter);
+      const oMatch = !oFilter || p.vendorName.toLowerCase().includes(oFilter);
+      const ouMatch = !ouFilter || p.organizationalUnit.toLowerCase().includes(ouFilter);
+      
+      // C mapping matches against the DN string directly since it's not a separate property
+      const cMatch = !cFilter || p.distinguishedName.toLowerCase().includes(`c=${cFilter}`);
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch && cnMatch && oMatch && cMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch && cnMatch && oMatch && ouMatch && cMatch;
     });
 
     // Sort the filtered results
