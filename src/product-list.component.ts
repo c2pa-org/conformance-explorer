@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon, NgIconComponent, provideIcons } from '@ng-icons/core';
 import { heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack } from '@ng-icons/heroicons/outline';
@@ -429,6 +429,18 @@ export class ProductListComponent {
 
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
+
+  private platformId = inject(PLATFORM_ID);
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = urlParams.get('q');
+      if (query) {
+        this.searchTerm.set(query);
+      }
+    }
+  }
 
   // This effect clears the file format selections when no media types are selected.
   private clearFormatsEffect = effect(() => {
