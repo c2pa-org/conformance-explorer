@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon, NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -411,7 +411,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   imports: [CommonModule, FormsModule, NgIconComponent, NgIcon],
   providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack })],
 })
-export class ProductListComponent {
+export class ProductListComponent implements OnInit {
   private dataService = inject(DataService);
 
   // Raw data signals
@@ -438,7 +438,7 @@ export class ProductListComponent {
   urlC = signal('');
   urlOu = signal('');
 
-  constructor() {
+  ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       // Use a robust URL parsing method that checks the full href
       const url = new URL(window.location.href);
