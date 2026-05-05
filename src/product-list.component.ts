@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon, NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -393,7 +393,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   imports: [CommonModule, FormsModule, NgIconComponent, NgIcon],
   providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack })],
 })
-export class ProductListComponent implements OnInit {
+export class ProductListComponent {
   private dataService = inject(DataService);
 
   // Raw data signals
@@ -414,37 +414,68 @@ export class ProductListComponent implements OnInit {
 
   private platformId = inject(PLATFORM_ID);
 
-  // URL DN filter signals
-  urlCn = signal('');
-  urlO = signal('');
-  urlC = signal('');
-  urlOu = signal('');
+  private urlParamsProcessed = false;
 
-  ngOnInit(): void {
+  // A reactive effect that parses the URL parameters once products have loaded,
+  // matching values case-insensitively to corresponding dropdown options or directing them to Search.
+  private resolveUrlParamsEffect = effect(() => {
+    const productsList = this.products();
+    if (productsList.length === 0 || this.urlParamsProcessed) return;
+
     if (isPlatformBrowser(this.platformId)) {
-      // Use a robust URL parsing method that checks the full href
       const url = new URL(window.location.href);
-      // Check standard search params first, fallback to hash params if present
       const getParam = (key: string) => {
         return url.searchParams.get(key) || new URLSearchParams(url.hash.split('?')[1] || '').get(key);
       };
 
-      const query = getParam('q');
-      if (query) this.searchTerm.set(query);
-      
-      const cn = getParam('cn');
-      if (cn) this.urlCn.set(cn.toLowerCase());
-
+      // 1. Map 'o' (Organization) -> selectedVendor (case-insensitively)
       const o = getParam('o');
-      if (o) this.urlO.set(o.toLowerCase());
+      if (o) {
+        const matchedVendor = this.vendors().find(v => v.toLowerCase() === o.toLowerCase());
+        if (matchedVendor) this.selectedVendor.set(matchedVendor);
+      }
 
+      // 2. Map 'type' -> selectedProductType
+      const type = getParam('type');
+      if (type) {
+        const matchedType = this.productTypes().find(t => t.toLowerCase() === type.toLowerCase());
+        if (matchedType) this.selectedProductType.set(matchedType);
+      }
+
+      // 3. Map 'status' -> selectedStatus
+      const status = getParam('status');
+      if (status) {
+        const matchedStatus = this.statuses().find(s => s.toLowerCase() === status.toLowerCase());
+        if (matchedStatus) this.selectedStatus.set(matchedStatus);
+      }
+
+      // 4. Map 'assurance' -> selectedAssuranceLevel (Supports both "Level 2" and just "2")
+      const assurance = getParam('assurance');
+      if (assurance) {
+        const cleanAssurance = assurance.toLowerCase().startsWith('level') ? assurance : `level ${assurance}`;
+        const matchedLevel = this.assuranceLevels().find(l => l.toLowerCase() === cleanAssurance.toLowerCase());
+        if (matchedLevel) this.selectedAssuranceLevel.set(matchedLevel);
+      }
+
+      // 5. Direct all specific X.509 fields (cn, ou, c) and generic search (q) -> main Search Term
+      const q = getParam('q');
+      const cn = getParam('cn');
       const ou = getParam('ou');
-      if (ou) this.urlOu.set(ou.toLowerCase());
-
       const c = getParam('c');
-      if (c) this.urlC.set(c.toLowerCase());
+
+      const searchParts = [];
+      if (q) searchParts.push(q);
+      if (cn) searchParts.push(cn);
+      if (ou) searchParts.push(ou);
+      if (c) searchParts.push(c);
+
+      if (searchParts.length > 0) {
+        this.searchTerm.set(searchParts.join(' '));
+      }
+
+      this.urlParamsProcessed = true;
     }
-  }
+  });
 
   // This effect clears the file format selections when no media types are selected.
   private clearFormatsEffect = effect(() => {
@@ -514,12 +545,6 @@ export class ProductListComponent implements OnInit {
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
 
-    // Get DN filters
-    const cnFilter = this.urlCn();
-    const oFilter = this.urlO();
-    const ouFilter = this.urlOu();
-    const cFilter = this.urlC();
-
     const filtered = this.products().filter(p => {
       const vendorMatch = vendor === '' || p.vendorName === vendor;
       const productTypeMatch = type === '' || p.productType === type;
@@ -530,22 +555,18 @@ export class ProductListComponent implements OnInit {
       
       const formatsMatch = formats.size === 0 || p.supportedFileFormats.some(f => formats.has(f));
 
-      const searchTermMatch = term === '' || 
+      // Advanced multi-word space-separated search term matching.
+      // Requiring each typed word to be found in at least one field of the product.
+      const words = term.split(/\s+/).filter(Boolean);
+      const searchTermMatch = words.length === 0 || words.every(word => 
         Object.values(p).some(val => 
-          typeof val === 'string' && val.toLowerCase().includes(term)
+          typeof val === 'string' && val.toLowerCase().includes(word)
         ) ||
-        p.supportedMediaTypes.some(type => type.toLowerCase().includes(term)) ||
-        p.supportedFileFormats.some(format => format.toLowerCase().includes(term));
+        p.supportedMediaTypes.some(t => t.toLowerCase().includes(word)) ||
+        p.supportedFileFormats.some(format => format.toLowerCase().includes(word))
+      );
 
-      // DN filters matching (CN maps to productName, O maps to vendorName, OU maps to organizationalUnit)
-      const cnMatch = !cnFilter || p.productName.toLowerCase().includes(cnFilter);
-      const oMatch = !oFilter || p.vendorName.toLowerCase().includes(oFilter);
-      const ouMatch = !ouFilter || p.organizationalUnit.toLowerCase().includes(ouFilter);
-      
-      // C mapping matches against the DN string directly since it's not a separate property
-      const cMatch = !cFilter || p.distinguishedName.toLowerCase().includes(`c=${cFilter}`);
-
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch && cnMatch && oMatch && ouMatch && cMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && mediaTypesMatch && formatsMatch && searchTermMatch && statusMatch;
     });
 
     // Sort the filtered results
