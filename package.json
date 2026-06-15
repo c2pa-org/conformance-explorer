@@ -22,7 +22,7 @@
     "@peculiar/x509": "^1.14.0",
     "ng": "^0.0.0",
     "rxjs": "^7.8.2",
-    "tailwindcss": "latest"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^20.3.7",
