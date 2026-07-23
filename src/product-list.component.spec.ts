@@ -101,4 +101,50 @@ describe('ProductListComponent', () => {
     expect(badge).toBeTruthy();
     expect(badge.textContent).toContain('2 RECORDS');
   });
+
+  it('should filter by generation media types', () => {
+    const prodGenImage = {
+      ...createMockProduct(1, 'prod-gen'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['jpeg'] },
+    };
+    const prodValImage = {
+      ...createMockProduct(1, 'prod-val'),
+      validationMediaTypes: ['image'],
+      validationFormats: { image: ['jpeg'] },
+    };
+    mockDataService.products?.set([prodGenImage, prodValImage]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedGenerationMediaTypes.set(new Set(['image']));
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('prod-gen');
+  });
+
+  it('should filter by validation media types', () => {
+    const prodGenImage = {
+      ...createMockProduct(1, 'prod-gen'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['jpeg'] },
+    };
+    const prodValImage = {
+      ...createMockProduct(1, 'prod-val'),
+      validationMediaTypes: ['image'],
+      validationFormats: { image: ['jpeg'] },
+    };
+    mockDataService.products?.set([prodGenImage, prodValImage]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedValidationMediaTypes.set(new Set(['image']));
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('prod-val');
+  });
 });
