@@ -6,7 +6,7 @@ import { heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack } fro
 import { DataService } from './services/data.service';
 import { Product, GroupedProduct } from './models/product.model';
 
-type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc' | 'creationDateAsc';
+type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc' | 'creationDateAsc' | 'companyAsc' | 'companyDesc';
 
 @Component({
   selector: 'app-product-list',
@@ -319,6 +319,8 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             <option value="conformanceDateAsc">Conformance Date (Oldest)</option>
             <option value="creationDateDesc">Application Date (Newest)</option>
             <option value="creationDateAsc">Application Date (Oldest)</option>
+            <option value="companyAsc">Company Name (A-Z)</option>
+            <option value="companyDesc">Company Name (Z-A)</option>
         </select>
     </div>
   </div>
@@ -610,6 +612,10 @@ export class ProductListComponent {
           return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
         case 'creationDateAsc':
           return new Date(a.creationDate).getTime() - new Date(b.creationDate).getTime();
+        case 'companyAsc':
+          return a.vendorName.localeCompare(b.vendorName) || a.productName.localeCompare(b.productName);
+        case 'companyDesc':
+          return b.vendorName.localeCompare(a.vendorName) || a.productName.localeCompare(b.productName);
         default:
             return 0;
       }
@@ -628,7 +634,7 @@ export class ProductListComponent {
       groups.get(dn)!.push(p);
     });
     
-    return Array.from(groups.entries()).map(([dn, records]) => {
+    const mappedGroups = Array.from(groups.entries()).map(([dn, records]) => {
       // Sort records by conformanceDate (newest first)
       records.sort((a, b) => new Date(b.conformanceDate).getTime() - new Date(a.conformanceDate).getTime());
       const first = records[0];
@@ -644,7 +650,24 @@ export class ProductListComponent {
         assuranceLevel: first.assuranceLevel,
         assuranceLevelValue: first.assuranceLevelValue,
       } as GroupedProduct;
-    });  });
+    });
+
+    const sort = this.sortOrder();
+    return mappedGroups.sort((a, b) => {
+      switch (sort) {
+        case 'conformanceDateDesc':
+          return new Date(b.latestConformanceDate).getTime() - new Date(a.latestConformanceDate).getTime();
+        case 'conformanceDateAsc':
+          return new Date(a.latestConformanceDate).getTime() - new Date(b.latestConformanceDate).getTime();
+        case 'companyAsc':
+          return a.vendorName.localeCompare(b.vendorName) || a.productName.localeCompare(b.productName);
+        case 'companyDesc':
+          return b.vendorName.localeCompare(a.vendorName) || a.productName.localeCompare(b.productName);
+        default:
+          return 0;
+      }
+    });
+  });
 
   isAnyFilterActive = computed(() => {
     return this.selectedVendor() !== '' || 

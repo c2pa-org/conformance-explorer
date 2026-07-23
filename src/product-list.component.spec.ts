@@ -147,4 +147,23 @@ describe('ProductListComponent', () => {
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('prod-val');
   });
+
+  it('should sort products by company name (A-Z and Z-A)', () => {
+    const prodB = { ...createMockProduct(1, 'prod-b'), vendorName: 'Beta Corp' };
+    const prodA = { ...createMockProduct(1, 'prod-a'), vendorName: 'Alpha Inc' };
+    mockDataService.products?.set([prodB, prodA]);
+    fixture.detectChanges();
+
+    component.sortOrder.set('companyAsc');
+    fixture.detectChanges();
+
+    expect(component.groupedProducts()[0].vendorName).toBe('Alpha Inc');
+    expect(component.groupedProducts()[1].vendorName).toBe('Beta Corp');
+
+    component.sortOrder.set('companyDesc');
+    fixture.detectChanges();
+
+    expect(component.groupedProducts()[0].vendorName).toBe('Beta Corp');
+    expect(component.groupedProducts()[1].vendorName).toBe('Alpha Inc');
+  });
 });
