@@ -166,4 +166,26 @@ describe('ProductListComponent', () => {
     expect(component.groupedProducts()[0].vendorName).toBe('Beta Corp');
     expect(component.groupedProducts()[1].vendorName).toBe('Alpha Inc');
   });
+
+  it('should filter independently by generation and validation file formats', () => {
+    const prodGenJpeg = {
+      ...createMockProduct(1, 'prod-jpeg'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['jpeg'] },
+    };
+    const prodGenPng = {
+      ...createMockProduct(1, 'prod-png'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['png'] },
+    };
+    mockDataService.products?.set([prodGenJpeg, prodGenPng]);
+    fixture.detectChanges();
+
+    component.selectedGenerationMediaTypes.set(new Set(['image']));
+    component.selectedGenerationFormats.set(new Set(['png']));
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('prod-png');
+  });
 });

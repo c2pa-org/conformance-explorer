@@ -261,6 +261,26 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             </div>
             }
         </div>
+
+        <!-- Generation File Format Subsection -->
+        @if (selectedGenerationMediaTypes().size > 0) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Generation File Formats (shows formats that match <span class="font-bold">any</span> selected generation type)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                @for (format of availableGenerationFileFormats(); track format) {
+                <div class="flex items-center">
+                    <input 
+                    type="checkbox" 
+                    [id]="'gen-format-' + format"
+                    [checked]="selectedGenerationFormats().has(format)"
+                    (change)="onGenerationFormatChange(format, $event)"
+                    class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                    <label [for]="'gen-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ format }}</label>
+                </div>
+                }
+            </div>
+          </div>
+        }
     </div>
 
     <!-- Validation Media Type Filters -->
@@ -279,27 +299,27 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             </div>
             }
         </div>
-    </div>
 
-    <!-- Contextual File Format Filters -->
-    @if (selectedGenerationMediaTypes().size > 0 || selectedValidationMediaTypes().size > 0) {
-      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">File Formats (shows formats that match <span class="font-bold">any</span> selected type)</label>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            @for (format of availableFileFormats(); track format) {
-            <div class="flex items-center">
-                <input 
-                type="checkbox" 
-                [id]="'format-' + format"
-                [checked]="selectedFormats().has(format)"
-                (change)="onFormatChange(format, $event)"
-                class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
-                <label [for]="'format-' + format" class="ml-2 text-sm text-slate-600 dark:text-slate-400 font-mono">{{ format }}</label>
+        <!-- Validation File Format Subsection -->
+        @if (selectedValidationMediaTypes().size > 0) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Validation File Formats (shows formats that match <span class="font-bold">any</span> selected validation type)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                @for (format of availableValidationFileFormats(); track format) {
+                <div class="flex items-center">
+                    <input 
+                    type="checkbox" 
+                    [id]="'val-format-' + format"
+                    [checked]="selectedValidationFormats().has(format)"
+                    (change)="onValidationFormatChange(format, $event)"
+                    class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                    <label [for]="'val-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ format }}</label>
+                </div>
+                }
             </div>
-            }
-        </div>
-      </div>
-    }
+          </div>
+        }
+    </div>
 
   </div>
 
@@ -427,7 +447,8 @@ export class ProductListComponent {
   sortOrder = signal<SortKey>('conformanceDateDesc');
   selectedGenerationMediaTypes = signal<Set<string>>(new Set());
   selectedValidationMediaTypes = signal<Set<string>>(new Set());
-  selectedFormats = signal<Set<string>>(new Set());
+  selectedGenerationFormats = signal<Set<string>>(new Set());
+  selectedValidationFormats = signal<Set<string>>(new Set());
   selectedStatus = signal('');
 
   // Modal signal
@@ -498,10 +519,16 @@ export class ProductListComponent {
     }
   });
 
-  // This effect clears the file format selections when no media types are selected.
-  private clearFormatsEffect = effect(() => {
-    if (this.selectedGenerationMediaTypes().size === 0 && this.selectedValidationMediaTypes().size === 0) {
-      this.selectedFormats.set(new Set());
+  // These effects clear the file format selections when no corresponding media types are selected.
+  private clearGenerationFormatsEffect = effect(() => {
+    if (this.selectedGenerationMediaTypes().size === 0) {
+      this.selectedGenerationFormats.set(new Set());
+    }
+  });
+
+  private clearValidationFormatsEffect = effect(() => {
+    if (this.selectedValidationMediaTypes().size === 0) {
+      this.selectedValidationFormats.set(new Set());
     }
   });
 
@@ -540,10 +567,9 @@ export class ProductListComponent {
   
   // This computed signal dynamically generates the list of available file formats
   // based on the currently selected media types, ensuring only relevant formats are shown.
-  availableFileFormats = computed(() => {
+  availableGenerationFileFormats = computed(() => {
     const genMedia = this.selectedGenerationMediaTypes();
-    const valMedia = this.selectedValidationMediaTypes();
-    if (genMedia.size === 0 && valMedia.size === 0) {
+    if (genMedia.size === 0) {
       return [];
     }
     const formats = new Set<string>();
@@ -553,6 +579,17 @@ export class ProductListComponent {
           product.generationFormats[mediaType].forEach(format => formats.add(format));
         }
       }
+    });
+    return Array.from(formats).sort();
+  });
+
+  availableValidationFileFormats = computed(() => {
+    const valMedia = this.selectedValidationMediaTypes();
+    if (valMedia.size === 0) {
+      return [];
+    }
+    const formats = new Set<string>();
+    this.products().forEach(product => {
       for (const mediaType of valMedia) {
         if (product.validationFormats[mediaType]) {
           product.validationFormats[mediaType].forEach(format => formats.add(format));
@@ -568,7 +605,8 @@ export class ProductListComponent {
     const level = this.selectedAssuranceLevel();
     const genMediaTypes = this.selectedGenerationMediaTypes();
     const valMediaTypes = this.selectedValidationMediaTypes();
-    const formats = this.selectedFormats();
+    const genFormats = this.selectedGenerationFormats();
+    const valFormats = this.selectedValidationFormats();
     const sort = this.sortOrder();
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
@@ -582,10 +620,10 @@ export class ProductListComponent {
       const genMediaTypesMatch = genMediaTypes.size === 0 || p.generationMediaTypes.some(mt => genMediaTypes.has(mt));
       const valMediaTypesMatch = valMediaTypes.size === 0 || p.validationMediaTypes.some(mt => valMediaTypes.has(mt));
       
-      const formatsMatch = formats.size === 0 || 
-        Array.from(genMediaTypes).some(mt => p.generationFormats[mt]?.some(f => formats.has(f))) ||
-        Array.from(valMediaTypes).some(mt => p.validationFormats[mt]?.some(f => formats.has(f))) ||
-        (genMediaTypes.size === 0 && valMediaTypes.size === 0 && p.supportedFileFormats.some(f => formats.has(f)));
+      const genFormatsMatch = genFormats.size === 0 || 
+        Array.from(genMediaTypes).some(mt => p.generationFormats[mt]?.some(f => genFormats.has(f)));
+      const valFormatsMatch = valFormats.size === 0 || 
+        Array.from(valMediaTypes).some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)));
 
       // Advanced multi-word space-separated search term matching.
       // Requiring each typed word to be found in at least one field of the product.
@@ -598,7 +636,7 @@ export class ProductListComponent {
         p.supportedFileFormats.some(format => format.toLowerCase().includes(word))
       );
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && genMediaTypesMatch && valMediaTypesMatch && formatsMatch && searchTermMatch && statusMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
     });
 
     // Sort the filtered results
@@ -676,7 +714,8 @@ export class ProductListComponent {
            this.selectedStatus() !== '' ||
            this.selectedGenerationMediaTypes().size > 0 ||
            this.selectedValidationMediaTypes().size > 0 ||
-           this.selectedFormats().size > 0 ||
+           this.selectedGenerationFormats().size > 0 ||
+           this.selectedValidationFormats().size > 0 ||
            this.searchTerm() !== '';
   });
 
@@ -731,9 +770,22 @@ export class ProductListComponent {
     });
   }
 
-  onFormatChange(format: string, event: Event): void {
+  onGenerationFormatChange(format: string, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
-    this.selectedFormats.update(currentSet => {
+    this.selectedGenerationFormats.update(currentSet => {
+        const newSet = new Set(currentSet);
+        if (isChecked) {
+            newSet.add(format);
+        } else {
+            newSet.delete(format);
+        }
+        return newSet;
+    });
+  }
+
+  onValidationFormatChange(format: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedValidationFormats.update(currentSet => {
         const newSet = new Set(currentSet);
         if (isChecked) {
             newSet.add(format);
@@ -753,7 +805,8 @@ export class ProductListComponent {
     this.sortOrder.set('conformanceDateDesc');
     this.selectedGenerationMediaTypes.set(new Set());
     this.selectedValidationMediaTypes.set(new Set());
-    this.selectedFormats.set(new Set());
+    this.selectedGenerationFormats.set(new Set());
+    this.selectedValidationFormats.set(new Set());
   }
 
   formatStatus(status: string): string {
