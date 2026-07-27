@@ -101,4 +101,69 @@ describe('ProductListComponent', () => {
     expect(badge).toBeTruthy();
     expect(badge.textContent).toContain('2 RECORDS');
   });
+
+  it('should filter by generation media types', () => {
+    const prodGenImage = {
+      ...createMockProduct(1, 'prod-gen'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['jpeg'] },
+    };
+    const prodValImage = {
+      ...createMockProduct(1, 'prod-val'),
+      validationMediaTypes: ['image'],
+      validationFormats: { image: ['jpeg'] },
+    };
+    mockDataService.products?.set([prodGenImage, prodValImage]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedGenerationMediaTypes.set(new Set(['image']));
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('prod-gen');
+  });
+
+  it('should filter by validation media types', () => {
+    const prodGenImage = {
+      ...createMockProduct(1, 'prod-gen'),
+      generationMediaTypes: ['image'],
+      generationFormats: { image: ['jpeg'] },
+    };
+    const prodValImage = {
+      ...createMockProduct(1, 'prod-val'),
+      validationMediaTypes: ['image'],
+      validationFormats: { image: ['jpeg'] },
+    };
+    mockDataService.products?.set([prodGenImage, prodValImage]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedValidationMediaTypes.set(new Set(['image']));
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('prod-val');
+  });
+
+  it('should sort products by company name (A-Z and Z-A)', () => {
+    const prodB = { ...createMockProduct(1, 'prod-b'), vendorName: 'Beta Corp' };
+    const prodA = { ...createMockProduct(1, 'prod-a'), vendorName: 'Alpha Inc' };
+    mockDataService.products?.set([prodB, prodA]);
+    fixture.detectChanges();
+
+    component.sortOrder.set('companyAsc');
+    fixture.detectChanges();
+
+    expect(component.groupedProducts()[0].vendorName).toBe('Alpha Inc');
+    expect(component.groupedProducts()[1].vendorName).toBe('Beta Corp');
+
+    component.sortOrder.set('companyDesc');
+    fixture.detectChanges();
+
+    expect(component.groupedProducts()[0].vendorName).toBe('Beta Corp');
+    expect(component.groupedProducts()[1].vendorName).toBe('Alpha Inc');
+  });
 });
