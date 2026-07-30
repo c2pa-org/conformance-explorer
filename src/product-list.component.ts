@@ -114,7 +114,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                             <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.generationFormats[mediaType]; track format) {
-                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ format }}</span>
+                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
                               }
                             </div>
                           </div>
@@ -138,7 +138,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                             <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.validationFormats[mediaType]; track format) {
-                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ format }}</span>
+                                <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
                               }
                             </div>
                           </div>
@@ -275,7 +275,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     [checked]="selectedGenerationFormats().has(format)"
                     (change)="onGenerationFormatChange(format, $event)"
                     class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
-                    <label [for]="'gen-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ format }}</label>
+                    <label [for]="'gen-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ formatFileFormat(format) }}</label>
                 </div>
                 }
             </div>
@@ -313,7 +313,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     [checked]="selectedValidationFormats().has(format)"
                     (change)="onValidationFormatChange(format, $event)"
                     class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
-                    <label [for]="'val-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ format }}</label>
+                    <label [for]="'val-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ formatFileFormat(format) }}</label>
                 </div>
                 }
             </div>
@@ -633,7 +633,7 @@ export class ProductListComponent {
           typeof val === 'string' && val.toLowerCase().includes(word)
         ) ||
         p.supportedMediaTypes.some(t => t.toLowerCase().includes(word)) ||
-        p.supportedFileFormats.some(format => format.toLowerCase().includes(word))
+        p.supportedFileFormats.some(format => format.toLowerCase().includes(word) || this.formatFileFormat(format).toLowerCase().includes(word))
       );
 
       return vendorMatch && productTypeMatch && assuranceLevelMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
@@ -822,6 +822,90 @@ export class ProductListComponent {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' - ');
+  }
+
+  formatFileFormat(format: string): string {
+    if (!format) return '';
+
+    const mapping: Record<string, string> = {
+      // Image
+      'image/jpeg': 'jpeg',
+      'image/jxl': 'jxl',
+      'image/png': 'png',
+      'image/svg+xml': 'svg',
+      'image/gif': 'gif',
+      'image/x-adobe-dng': 'dng',
+      'image/tiff': 'tiff',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+      'image/heic-sequence': 'heics',
+      'image/heif': 'heif',
+      'image/heif-sequence': 'heifs',
+      'image/avif': 'avif',
+      'image/x-tiff-based': 'tiff-based',
+      'image/x-riff-based': 'riff-based',
+
+      // Video
+      'video/x-msvideo': 'avi',
+      'video/mp4': 'mp4',
+      'video/quicktime': 'mov',
+      'video/x-bmff-based': 'bmff-based',
+      'video/x-riff-based': 'riff-based',
+
+      // Audio
+      'audio/flac': 'flac',
+      'audio/MPA': 'mpa',
+      'audio/mpeg': 'mp3',
+      'audio/wav': 'wav',
+      'audio/aac': 'aac',
+      'audio/mp4': 'm4a',
+      'audio/x-riff-based': 'riff-based',
+
+      // Text HTML
+      'text/html': 'html',
+
+      // Text Unstructured
+      'text/csv': 'csv',
+      'text/tab-separated-values': 'tsv',
+      'text/plain': 'txt',
+
+      // Text Structured
+      'text/markdown': 'md',
+      'text/xml': 'xml',
+      'application/xml': 'xml',
+      'application/xhtml+xml': 'xhtml',
+
+      // Documents
+      'application/pdf': 'pdf',
+      'application/epub+zip': 'epub',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'ppsx',
+      'application/vnd.oasis.opendocument.text': 'odt',
+      'application/vnd.oasis.opendocument.spreadsheet': 'ods',
+      'application/vnd.oasis.opendocument.presentation': 'odp',
+      'application/vnd.oasis.opendocument.graphics': 'odg',
+      'application/oxps': 'oxps',
+      'application/x-zip-based': 'zip-based',
+
+      // Fonts
+      'font/otf': 'otf',
+    };
+
+    if (mapping[format]) {
+      return mapping[format];
+    }
+
+    if (format.includes('/')) {
+      const subtype = format.split('/')[1];
+      if (subtype.startsWith('x-')) {
+        return subtype.substring(2);
+      }
+      return subtype;
+    }
+
+    return format;
   }
 
   // Modal logic
