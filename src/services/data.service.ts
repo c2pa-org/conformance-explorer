@@ -46,20 +46,24 @@ export class DataService {
       if (p.liveVideo?.supported) {
         if (p.liveVideo.encapsulations && p.liveVideo.encapsulations.length > 0) {
           p.liveVideo.encapsulations.forEach(encap => {
-            const formatName = encap.type;
+            const items = [encap.type, ...(encap.methods || [])];
             if (encap.generation) {
               generationMediaTypesSet.add('liveVideo');
               if (!generationFormats['liveVideo']) generationFormats['liveVideo'] = [];
-              if (!generationFormats['liveVideo'].includes(formatName)) {
-                generationFormats['liveVideo'].push(formatName);
-              }
+              items.forEach(item => {
+                if (!generationFormats['liveVideo'].includes(item)) {
+                  generationFormats['liveVideo'].push(item);
+                }
+              });
             }
             if (encap.validation) {
               validationMediaTypesSet.add('liveVideo');
               if (!validationFormats['liveVideo']) validationFormats['liveVideo'] = [];
-              if (!validationFormats['liveVideo'].includes(formatName)) {
-                validationFormats['liveVideo'].push(formatName);
-              }
+              items.forEach(item => {
+                if (!validationFormats['liveVideo'].includes(item)) {
+                  validationFormats['liveVideo'].push(item);
+                }
+              });
             }
           });
         } else {
