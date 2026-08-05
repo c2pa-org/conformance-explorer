@@ -72,6 +72,9 @@ export interface ContainerFormats {
   image?: string[];
   video?: string[];
   audio?: string[];
+  textHtml?: string[];
+  textUnstructured?: string[];
+  textStructured?: string[];
   documents?: string[];
   fonts?: string[];
   mlModel?: string[];

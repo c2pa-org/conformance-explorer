@@ -111,7 +111,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <div class="space-y-3">
                         @for (mediaType of product.generationMediaTypes; track mediaType) {
                           <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{ formatMediaType(mediaType) }}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.generationFormats[mediaType]; track format) {
                                 <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
@@ -135,7 +135,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <div class="space-y-3">
                         @for (mediaType of product.validationMediaTypes; track mediaType) {
                           <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{ formatMediaType(mediaType) }}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.validationFormats[mediaType]; track format) {
                                 <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
@@ -537,6 +537,9 @@ export class ProductListComponent {
     { key: 'image', label: 'Image' },
     { key: 'video', label: 'Video' },
     { key: 'audio', label: 'Audio' },
+    { key: 'textHtml', label: 'HTML Text' },
+    { key: 'textUnstructured', label: 'Unstructured Text' },
+    { key: 'textStructured', label: 'Structured Text' },
     { key: 'documents', label: 'Documents' },
     { key: 'fonts', label: 'Fonts' },
     { key: 'mlModel', label: 'ML Model' },
@@ -822,6 +825,21 @@ export class ProductListComponent {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' - ');
+  }
+
+  formatMediaType(mediaType: string): string {
+    const labels: Record<string, string> = {
+      image: 'Image',
+      video: 'Video',
+      audio: 'Audio',
+      textHtml: 'HTML Text',
+      textUnstructured: 'Unstructured Text',
+      textStructured: 'Structured Text',
+      documents: 'Documents',
+      fonts: 'Fonts',
+      mlModel: 'ML Model',
+    };
+    return labels[mediaType] || mediaType;
   }
 
   formatFileFormat(format: string): string {
