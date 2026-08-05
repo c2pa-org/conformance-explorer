@@ -106,6 +106,7 @@ export class DataService {
         creationDate: p.dates.creation,
         conformanceDate: p.dates.conformance,
         specVersions: p.specVersion,
+        conformanceProgramVersion: p.conformanceProgramVersion || 'N/A',
         status: p.status,
         lastModification: p.dates.lastModification,
         assuranceLevelValue: p.product.assurance?.maxAssuranceLevel ?? null,

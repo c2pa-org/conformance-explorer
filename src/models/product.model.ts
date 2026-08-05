@@ -33,6 +33,7 @@ export interface Product {
   creationDate: string;
   conformanceDate: string;
   specVersions: string[];
+  conformanceProgramVersion: string;
   status: string;
   lastModification: string;
   assuranceLevelValue: number | null;

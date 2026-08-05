@@ -31,6 +31,7 @@ describe('ProductListComponent', () => {
     creationDate: '2023-01-01',
     conformanceDate: '2023-01-01',
     specVersions: ['2.2'],
+    conformanceProgramVersion: '0.1',
     status: 'conformant',
     lastModification: '2023-01-01',
   });
@@ -200,5 +201,25 @@ describe('ProductListComponent', () => {
     expect(component.getDisallowedSignalsList(productWithSignals)).toEqual(['capturedMedia', 'nonGenAIDigitalCreation']);
     expect(component.formatSignalName('capturedMedia')).toBe('Captured Media');
     expect(component.formatSignalName('nonGenAIDigitalCreation')).toBe('Non Gen A I Digital Creation');
+  });
+
+  it('should filter products by spec version and program version', () => {
+    const prod1 = { ...createMockProduct(1, 'p1'), specVersions: ['2.2'], conformanceProgramVersion: '0.1' };
+    const prod2 = { ...createMockProduct(1, 'p2'), specVersions: ['2.4'], conformanceProgramVersion: '0.2' };
+    mockDataService.products?.set([prod1, prod2]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedSpecVersion.set('2.4');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
+
+    component.selectedSpecVersion.set('');
+    component.selectedProgramVersion.set('0.1');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
   });
 });

@@ -61,10 +61,28 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             </div>
             
             <div class="p-4 space-y-6">
+              <!-- Product Info URL Section (Always Present) -->
+              <div class="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                  <span class="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Product Info URL:</span>
+                </div>
+                <div>
+                  @if (product.infoURL; as link) {
+                    <a [href]="link" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline font-medium break-all flex items-center gap-1">
+                      <span>{{ link }}</span>
+                      <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                  } @else {
+                    <span class="text-slate-400 dark:text-slate-500 italic">None provided</span>
+                  }
+                </div>
+              </div>
+
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                   <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Version & Specs</h5>
-                  <dl class="space-y-1 text-sm">
+                  <dl class="space-y-1.5 text-sm">
                     <div class="flex justify-between">
                       <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
@@ -73,29 +91,10 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
                     </div>
-                    <div class="flex justify-between items-center">
-                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifests:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">
-                        @if (product.supportsCompressedManifests === true) {
-                          <span class="text-xs font-bold text-green-700 dark:text-green-400">Yes</span>
-                        } @else if (product.supportsCompressedManifests === false) {
-                          <span class="text-xs text-slate-500 dark:text-slate-400">No</span>
-                        } @else {
-                          <span class="text-xs text-slate-400">N/A</span>
-                        }
-                      </dd>
+                    <div class="flex justify-between">
+                      <dt class="text-slate-500 dark:text-slate-400">Program Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceProgramVersion }}</dd>
                     </div>
-                    @if (product.infoURL; as link) {
-                      <div class="flex justify-between items-center">
-                        <dt class="text-slate-500 dark:text-slate-400">Info Link:</dt>
-                        <dd>
-                          <a [href]="link" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold inline-flex items-center gap-1">
-                            <span>Link</span>
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                          </a>
-                        </dd>
-                      </div>
-                    }
                   </dl>
                 </div>
                 
@@ -128,6 +127,20 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.creationDate | date:'shortDate' }}</dd>
                     </div>
                   </dl>
+                </div>
+              </div>
+
+              <!-- Supports Compressed Manifests Section (Separated) -->
+              <div class="pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                <span class="font-semibold text-slate-600 dark:text-slate-400">Supports Compressed Manifests</span>
+                <div>
+                  @if (product.supportsCompressedManifests === true) {
+                    <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 font-bold px-2.5 py-1 rounded-md">Yes</span>
+                  } @else if (product.supportsCompressedManifests === false) {
+                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-2.5 py-1 rounded-md">No</span>
+                  } @else {
+                    <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
+                  }
                 </div>
               </div>
 
@@ -247,7 +260,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
         />
       </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <!-- Filter by Vendor -->
       <div>
         <label for="vendor" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Vendor</label>
@@ -301,6 +314,34 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           <option value="">All Statuses</option>
           @for (status of statuses(); track status) {
             <option [value]="status">{{ formatStatus(status) }}</option>
+          }
+        </select>
+      </div>
+      <!-- Filter by Spec Version -->
+      <div>
+        <label for="spec-version" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Spec Version</label>
+        <select
+          id="spec-version"
+          [ngModel]="selectedSpecVersion()"
+          (ngModelChange)="onSpecVersionChange($event)"
+          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+          <option value="">All Spec Versions</option>
+          @for (version of specVersionsOptions(); track version) {
+            <option [value]="version">{{ version }}</option>
+          }
+        </select>
+      </div>
+      <!-- Filter by Program Version -->
+      <div>
+        <label for="program-version" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Program Version</label>
+        <select
+          id="program-version"
+          [ngModel]="selectedProgramVersion()"
+          (ngModelChange)="onProgramVersionChange($event)"
+          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+          <option value="">All Program Versions</option>
+          @for (version of programVersionsOptions(); track version) {
+            <option [value]="version">{{ version }}</option>
           }
         </select>
       </div>
@@ -527,6 +568,8 @@ export class ProductListComponent {
   selectedGenerationFormats = signal<Set<string>>(new Set());
   selectedValidationFormats = signal<Set<string>>(new Set());
   selectedStatus = signal('');
+  selectedSpecVersion = signal('');
+  selectedProgramVersion = signal('');
 
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
@@ -644,6 +687,22 @@ export class ProductListComponent {
     const statuses = this.products().map(p => p.status);
     return [...new Set(statuses)].sort();
   });
+
+  specVersionsOptions = computed(() => {
+    const versions = new Set<string>();
+    this.products().forEach(p => p.specVersions?.forEach(v => versions.add(v)));
+    return Array.from(versions).sort();
+  });
+
+  programVersionsOptions = computed(() => {
+    const versions = new Set<string>();
+    this.products().forEach(p => {
+      if (p.conformanceProgramVersion) {
+        versions.add(p.conformanceProgramVersion);
+      }
+    });
+    return Array.from(versions).sort();
+  });
   
   // This computed signal dynamically generates the list of available file formats
   // based on the currently selected media types, ensuring only relevant formats are shown.
@@ -683,6 +742,8 @@ export class ProductListComponent {
     const vendor = this.selectedVendor();
     const type = this.selectedProductType();
     const level = this.selectedAssuranceLevel();
+    const specVer = this.selectedSpecVersion();
+    const progVer = this.selectedProgramVersion();
     const genMediaTypes = this.selectedGenerationMediaTypes();
     const valMediaTypes = this.selectedValidationMediaTypes();
     const genFormats = this.selectedGenerationFormats();
@@ -696,6 +757,8 @@ export class ProductListComponent {
       const productTypeMatch = type === '' || p.productType === type;
       const assuranceLevelMatch = level === '' || p.assuranceLevel === level;
       const statusMatch = status === '' || p.status === status;
+      const specVersionMatch = specVer === '' || p.specVersions?.includes(specVer);
+      const programVersionMatch = progVer === '' || p.conformanceProgramVersion === progVer;
       
       const genMediaTypesMatch = genMediaTypes.size === 0 || p.generationMediaTypes.some(mt => genMediaTypes.has(mt));
       const valMediaTypesMatch = valMediaTypes.size === 0 || p.validationMediaTypes.some(mt => valMediaTypes.has(mt));
@@ -716,7 +779,7 @@ export class ProductListComponent {
         p.supportedFileFormats.some(format => format.toLowerCase().includes(word) || this.formatFileFormat(format).toLowerCase().includes(word))
       );
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
     });
 
     // Sort the filtered results
@@ -793,6 +856,8 @@ export class ProductListComponent {
            this.selectedProductType() !== '' || 
            this.selectedAssuranceLevel() !== '' || 
            this.selectedStatus() !== '' ||
+           this.selectedSpecVersion() !== '' ||
+           this.selectedProgramVersion() !== '' ||
            this.selectedGenerationMediaTypes().size > 0 ||
            this.selectedValidationMediaTypes().size > 0 ||
            this.selectedGenerationFormats().size > 0 ||
@@ -815,6 +880,14 @@ export class ProductListComponent {
 
   onStatusChange(value: string): void {
     this.selectedStatus.set(value);
+  }
+
+  onSpecVersionChange(value: string): void {
+    this.selectedSpecVersion.set(value);
+  }
+
+  onProgramVersionChange(value: string): void {
+    this.selectedProgramVersion.set(value);
   }
 
   onSearchTermChange(value: string): void {
@@ -882,6 +955,8 @@ export class ProductListComponent {
     this.selectedProductType.set('');
     this.selectedAssuranceLevel.set('');
     this.selectedStatus.set('');
+    this.selectedSpecVersion.set('');
+    this.selectedProgramVersion.set('');
     this.searchTerm.set('');
     this.sortOrder.set('conformanceDateDesc');
     this.selectedGenerationMediaTypes.set(new Set());
