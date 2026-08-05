@@ -51,6 +51,7 @@ export interface GroupedProduct {
   productTypes: string[];
   assuranceLevel: string;
   assuranceLevelValue: number | null;
+  supportsLiveVideo?: boolean;
 }
 
 // Interfaces for the raw JSON data structure from the conformance list

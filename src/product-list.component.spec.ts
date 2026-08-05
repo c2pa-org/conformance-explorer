@@ -222,4 +222,41 @@ describe('ProductListComponent', () => {
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('p1');
   });
+
+  it('should filter products by live video options', () => {
+    const prod1 = {
+      ...createMockProduct(1, 'p1'),
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'fMP4', methods: ['per-segment'], generation: true }],
+      },
+    };
+    const prod2 = {
+      ...createMockProduct(1, 'p2'),
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'CMAF', methods: ['verifiable-segment-info'], validation: true }],
+      },
+    };
+    const prod3 = {
+      ...createMockProduct(1, 'p3'),
+      liveVideo: { supported: false },
+    };
+    mockDataService.products?.set([prod1, prod2, prod3]);
+    fixture.detectChanges();
+
+    component.selectedLiveVideo.set('supported');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedLiveVideo.set('fMP4');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
+
+    component.selectedLiveVideo.set('verifiable-segment-info');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
+  });
 });
