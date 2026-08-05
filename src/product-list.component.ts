@@ -670,60 +670,120 @@ export class ProductListComponent {
     { key: 'mlModel', label: 'ML Model' },
   ];
 
-  // Derived (computed) signals for UI elements and filtering
+  // Derived signals for UI elements and filtering
   vendors = computed(() => {
     const vendorNames = this.products().map(p => p.vendorName);
-    // Fix: Explicitly type sort callback parameters to resolve 'unknown' type error.
     return [...new Set(vendorNames)].sort((a: string, b: string) => a.localeCompare(b));
   });
 
-  productTypes = computed(() => {
-    const types = this.products().map(p => p.productType);
-    return [...new Set(types)].sort();
-  });
+  // Schema-defined enum options for filters
+  productTypes = signal<string[]>(['Generator', 'Validator']);
+  assuranceLevels = signal<string[]>(['Level 1', 'Level 2']);
+  statuses = signal<string[]>(['conformant', 'revoked', 'revoked_eol', 'revoked_vulnerability']);
+  specVersionsOptions = signal<string[]>(['2.2', '2.4']);
+  programVersionsOptions = signal<string[]>(['0.1', '0.2']);
 
-  assuranceLevels = computed(() => {
-    const levels = this.products().map(p => p.assuranceLevel);
-    // Fix: Explicitly type sort callback parameters to resolve 'unknown' type error.
-    return [...new Set(levels)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
-  });
+  // Schema-defined container formats & MIME types per media type
+  private readonly schemaFormatsByMediaType: Record<string, string[]> = {
+    image: [
+      'image/jpeg',
+      'image/jxl',
+      'image/png',
+      'image/svg+xml',
+      'image/gif',
+      'image/x-adobe-dng',
+      'image/tiff',
+      'image/webp',
+      'image/heic',
+      'image/heic-sequence',
+      'image/heif',
+      'image/heif-sequence',
+      'image/avif',
+      'image/x-tiff-based',
+      'image/x-riff-based',
+    ],
+    video: [
+      'video/x-msvideo',
+      'video/mp4',
+      'video/quicktime',
+      'video/x-bmff-based',
+      'video/x-riff-based',
+    ],
+    liveVideo: [
+      'fMP4',
+      'CMAF',
+      'per-segment',
+      'verifiable-segment-info',
+    ],
+    audio: [
+      'audio/flac',
+      'audio/MPA',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/aac',
+      'audio/mp4',
+      'audio/x-riff-based',
+    ],
+    textHtml: [
+      'text/html',
+    ],
+    textUnstructured: [
+      'text/csv',
+      'text/tab-separated-values',
+      'text/plain',
+    ],
+    textStructured: [
+      'text/markdown',
+      'text/xml',
+      'application/xml',
+      'application/xhtml+xml',
+    ],
+    documents: [
+      'application/pdf',
+      'application/epub+zip',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+      'application/vnd.oasis.opendocument.text',
+      'application/vnd.oasis.opendocument.spreadsheet',
+      'application/vnd.oasis.opendocument.presentation',
+      'application/vnd.oasis.opendocument.graphics',
+      'application/oxps',
+      'application/x-zip-based',
+    ],
+    fonts: [
+      'font/otf',
+    ],
+    mlModel: [
+      'jax',
+      'keras',
+      'ml_net',
+      'mxnet',
+      'onnx',
+      'openvivo.parameter',
+      'openvivo.topology',
+      'pytorch',
+      'tensorflow',
+      'numpy',
+      'protobuf',
+      'pickle',
+      'savedmodel',
+    ],
+  };
 
-  statuses = computed(() => {
-    const statuses = this.products().map(p => p.status);
-    return [...new Set(statuses)].sort();
-  });
-
-  specVersionsOptions = computed(() => {
-    const versions = new Set<string>();
-    this.products().forEach(p => p.specVersions?.forEach(v => versions.add(v)));
-    return Array.from(versions).sort();
-  });
-
-  programVersionsOptions = computed(() => {
-    const versions = new Set<string>();
-    this.products().forEach(p => {
-      if (p.conformanceProgramVersion) {
-        versions.add(p.conformanceProgramVersion);
-      }
-    });
-    return Array.from(versions).sort();
-  });
-  
-  // This computed signal dynamically generates the list of available file formats
-  // based on the currently selected media types, ensuring only relevant formats are shown.
   availableGenerationFileFormats = computed(() => {
     const genMedia = this.selectedGenerationMediaTypes();
     if (genMedia.size === 0) {
       return [];
     }
     const formats = new Set<string>();
-    this.products().forEach(product => {
-      for (const mediaType of genMedia) {
-        if (product.generationFormats[mediaType]) {
-          product.generationFormats[mediaType].forEach(format => formats.add(format));
-        }
+    for (const mediaType of genMedia) {
+      const schemaFormats = this.schemaFormatsByMediaType[mediaType];
+      if (schemaFormats) {
+        schemaFormats.forEach(format => formats.add(format));
       }
-    });
+    }
     return Array.from(formats).sort();
   });
 
@@ -733,13 +793,12 @@ export class ProductListComponent {
       return [];
     }
     const formats = new Set<string>();
-    this.products().forEach(product => {
-      for (const mediaType of valMedia) {
-        if (product.validationFormats[mediaType]) {
-          product.validationFormats[mediaType].forEach(format => formats.add(format));
-        }
+    for (const mediaType of valMedia) {
+      const schemaFormats = this.schemaFormatsByMediaType[mediaType];
+      if (schemaFormats) {
+        schemaFormats.forEach(format => formats.add(format));
       }
-    });
+    }
     return Array.from(formats).sort();
   });
 
