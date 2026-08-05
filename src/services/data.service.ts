@@ -40,8 +40,8 @@ export class DataService {
         }
       };
 
-      processContainer(p.containers.generate, generationFormats, generationMediaTypesSet);
-      processContainer(p.containers.validate, validationFormats, validationMediaTypesSet);
+      processContainer(p.containers?.generate, generationFormats, generationMediaTypesSet);
+      processContainer(p.containers?.validate, validationFormats, validationMediaTypesSet);
 
       // Create the combined properties for filtering from the separate ones.
       const allFormats = new Set<string>();
@@ -92,6 +92,10 @@ export class DataService {
         productVersion: p.product.minVersion || 'N/A',
         productType: friendlyProductType,
         assuranceLevel: assuranceLevel,
+        infoURL: p.product.infoURL || undefined,
+        supportsCompressedManifests: p.supportsCompressedManifests ?? null,
+        disallowedSignals: p.product.disallowedSignals || undefined,
+        liveVideo: p.liveVideo || undefined,
         supportedFileFormats: Array.from(allFormats).sort(),
         formatsByMediaType: formatsByMediaType,
         supportedMediaTypes: Array.from(allMediaTypes).sort(),

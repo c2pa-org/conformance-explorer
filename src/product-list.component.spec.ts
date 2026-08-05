@@ -188,4 +188,17 @@ describe('ProductListComponent', () => {
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('prod-png');
   });
+
+  it('should correctly format signal names and detect disallowed signals', () => {
+    const productWithSignals = {
+      ...createMockProduct(1, 'prod-signals'),
+      disallowedSignals: {
+        inception: ['capturedMedia', 'nonGenAIDigitalCreation'],
+      },
+    };
+    expect(component.hasDisallowedSignals(productWithSignals)).toBeTrue();
+    expect(component.getDisallowedSignalsList(productWithSignals)).toEqual(['capturedMedia', 'nonGenAIDigitalCreation']);
+    expect(component.formatSignalName('capturedMedia')).toBe('Captured Media');
+    expect(component.formatSignalName('nonGenAIDigitalCreation')).toBe('Non Gen A I Digital Creation');
+  });
 });

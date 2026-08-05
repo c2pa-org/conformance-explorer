@@ -7,6 +7,22 @@ export interface Product {
   productVersion: string;
   productType: string;
   assuranceLevel: string;
+  infoURL?: string;
+  supportsCompressedManifests?: boolean | null;
+  disallowedSignals?: {
+    inception?: string[];
+    transformation?: string[];
+    [key: string]: string[] | undefined;
+  };
+  liveVideo?: {
+    supported: boolean;
+    encapsulations?: Array<{
+      type: string;
+      methods: string[];
+      generation?: boolean;
+      validation?: boolean;
+    }>;
+  };
   supportedFileFormats: string[];
   formatsByMediaType: { [key: string]: string[] };
   supportedMediaTypes: string[];
@@ -27,6 +43,7 @@ export interface GroupedProduct {
   vendorName: string;
   productName: string;
   organizationalUnit: string;
+  infoURL?: string;
   records: Product[];
   latestConformanceDate: string;
   statuses: string[];
@@ -47,25 +64,41 @@ export interface RawProduct {
       OU?: string;
       C: string;
     };
+    infoURL?: string;
     minVersion?: string;
     assurance?: {
       maxAssuranceLevel: number;
       attestationMethods?: string[];
     };
+    disallowedSignals?: {
+      inception?: string[];
+      transformation?: string[];
+      [key: string]: string[] | undefined;
+    };
   };
   specVersion: string[];
   conformanceProgramVersion: string;
-  containers: {
+  containers?: {
     generate?: ContainerFormats;
     validate?: ContainerFormats;
   };
+  liveVideo?: {
+    supported: boolean;
+    encapsulations?: Array<{
+      type: string;
+      methods: string[];
+      generation?: boolean;
+      validation?: boolean;
+    }>;
+  };
+  supportsCompressedManifests?: boolean;
   status: string;
   dates: {
     creation: string;
     conformance: string;
     earliestPublicDisclosure: string;
     lastModification: string;
-  }
+  };
 }
 
 export interface ContainerFormats {

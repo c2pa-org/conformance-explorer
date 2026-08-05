@@ -15,11 +15,21 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
       <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
-        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
-        <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
-        @if (selectedGroup()?.organizationalUnit) {
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
-        }
+        <div class="flex flex-wrap justify-between items-start gap-4">
+          <div>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
+            <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
+            @if (selectedGroup()?.organizationalUnit) {
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
+            }
+          </div>
+          @if (selectedGroup()?.infoURL; as infoUrl) {
+            <a [href]="infoUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-lg text-xs font-bold transition-colors border border-blue-200 dark:border-blue-800">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              <span>Product Documentation</span>
+            </a>
+          }
+        </div>
         <div class="mt-2 flex items-center gap-2">
             <span class="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded">{{ selectedGroup()?.distinguishedName }}</span>
         </div>
@@ -63,6 +73,29 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
                     </div>
+                    <div class="flex justify-between items-center">
+                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifests:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">
+                        @if (product.supportsCompressedManifests === true) {
+                          <span class="text-xs font-bold text-green-700 dark:text-green-400">Yes</span>
+                        } @else if (product.supportsCompressedManifests === false) {
+                          <span class="text-xs text-slate-500 dark:text-slate-400">No</span>
+                        } @else {
+                          <span class="text-xs text-slate-400">N/A</span>
+                        }
+                      </dd>
+                    </div>
+                    @if (product.infoURL; as link) {
+                      <div class="flex justify-between items-center">
+                        <dt class="text-slate-500 dark:text-slate-400">Info Link:</dt>
+                        <dd>
+                          <a [href]="link" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold inline-flex items-center gap-1">
+                            <span>Link</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                          </a>
+                        </dd>
+                      </div>
+                    }
                   </dl>
                 </div>
                 
@@ -150,6 +183,42 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                   </div>
                 </div>
               </div>
+
+              <!-- Disallowed Signals Section -->
+              @if (hasDisallowedSignals(product)) {
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Disallowed Signals</h5>
+                  <div class="flex flex-wrap gap-2">
+                    @for (signal of getDisallowedSignalsList(product); track signal) {
+                      <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-200 dark:border-amber-800/50 flex items-center gap-1">
+                        <span>🚫</span>
+                        <span>{{ formatSignalName(signal) }}</span>
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Live Video Support Section -->
+              @if (product.liveVideo?.supported) {
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Live Video Support</h5>
+                  <div class="space-y-2">
+                    @for (encap of product.liveVideo?.encapsulations; track encap.type) {
+                      <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-xs flex flex-wrap justify-between items-center gap-2">
+                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ encap.type }}</span>
+                        <div class="flex items-center gap-1.5">
+                          @if (encap.generation) { <span class="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Generation</span> }
+                          @if (encap.validation) { <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Validation</span> }
+                        </div>
+                        <div class="w-full text-slate-500 dark:text-slate-400 text-[11px] mt-1">
+                          Methods: <span class="font-mono text-slate-700 dark:text-slate-300">{{ encap.methods.join(', ') }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           </div>
         }
@@ -361,7 +430,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
           </div>
           <p class="text-slate-600 dark:text-slate-300 font-medium mt-1">{{ group.vendorName }}</p>
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.organizationalUnit }}</p>
+          @if (group.organizationalUnit) {
+            <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.organizationalUnit }}</p>
+          }
+          @if (group.infoURL; as link) {
+            <a [href]="link" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()" class="inline-flex items-center gap-1 mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              <span>Product Info</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          }
           
           <div class="mt-3 flex flex-wrap gap-2">
             @for (status of group.statuses; track status) {
@@ -430,7 +507,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent, NgIcon],
+  imports: [CommonModule, FormsModule, NgIconComponent],
   providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack })],
 })
 export class ProductListComponent {
@@ -684,6 +761,7 @@ export class ProductListComponent {
         vendorName: first.vendorName,
         productName: first.productName,
         organizationalUnit: first.organizationalUnit,
+        infoURL: first.infoURL || records.find(r => r.infoURL)?.infoURL,
         records: records,
         latestConformanceDate: first.conformanceDate, // The first record is now the latest due to sorting
         statuses: [...new Set(records.map(p => p.status))],
@@ -840,6 +918,26 @@ export class ProductListComponent {
       mlModel: 'ML Model',
     };
     return labels[mediaType] || mediaType;
+  }
+
+  hasDisallowedSignals(product: Product): boolean {
+    if (!product.disallowedSignals) return false;
+    const inc = product.disallowedSignals.inception || [];
+    const trans = product.disallowedSignals.transformation || [];
+    return inc.length > 0 || trans.length > 0;
+  }
+
+  getDisallowedSignalsList(product: Product): string[] {
+    if (!product.disallowedSignals) return [];
+    const inc = product.disallowedSignals.inception || [];
+    const trans = product.disallowedSignals.transformation || [];
+    return [...inc, ...trans];
+  }
+
+  formatSignalName(signal: string): string {
+    return signal
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
   }
 
   formatFileFormat(format: string): string {
