@@ -337,22 +337,14 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           [ngModel]="selectedProgramVersion()"
           (ngModelChange)="onProgramVersionChange($event)"
           class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-          <option value="">All Program Versions</option>
+       <option value="">All Program Versions</option>
           @for (version of programVersionsOptions(); track version) {
             <option [value]="version">{{ version }}</option>
           }
         </select>
       </div>
     </div>
-    <!-- Reset Button -->
-    <div class="mt-4 flex justify-end">
-        <button 
-          (click)="resetFilters()"
-          class="w-full sm:w-auto bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 text-sm disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 disabled:cursor-not-allowed"
-          [disabled]="!isAnyFilterActive()">
-          Reset Filters
-        </button>
-    </div>
+
     <!-- Generation Media Type Filters -->
     <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Generation Media Types (select all that apply)</label>
@@ -394,9 +386,11 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 
         <!-- Live Video Generation Sub-section -->
         @if (selectedGenerationMediaTypes().has('liveVideo')) {
-          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
-            <span class="block text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Live Video Streaming Generation</span>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50/50 dark:bg-purple-950/20 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Live Video Generation Streaming Details
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
                 <div class="flex flex-wrap gap-x-4 gap-y-2">
@@ -407,7 +401,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                         [id]="'gen-live-encap-' + encap"
                         [checked]="selectedGenerationLiveEncapsulations().has(encap)"
                         (change)="onGenerationLiveEncapChange(encap, $event)"
-                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
                       <label [for]="'gen-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
                     </div>
                   }
@@ -424,7 +418,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                         [id]="'gen-live-method-' + method"
                         [checked]="selectedGenerationLiveSigningMethods().has(method)"
                         (change)="onGenerationLiveSigningMethodChange(method, $event)"
-                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
                       <label [for]="'gen-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
                     </div>
                   }
@@ -476,9 +470,11 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 
         <!-- Live Video Validation Sub-section -->
         @if (selectedValidationMediaTypes().has('liveVideo')) {
-          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
-            <span class="block text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Live Video Streaming Validation</span>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50/50 dark:bg-purple-950/20 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Live Video Validation Streaming Details
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
                 <div class="flex flex-wrap gap-x-4 gap-y-2">
@@ -489,7 +485,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                         [id]="'val-live-encap-' + encap"
                         [checked]="selectedValidationLiveEncapsulations().has(encap)"
                         (change)="onValidationLiveEncapChange(encap, $event)"
-                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
                       <label [for]="'val-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
                     </div>
                   }
@@ -506,7 +502,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                         [id]="'val-live-method-' + method"
                         [checked]="selectedValidationLiveSigningMethods().has(method)"
                         (change)="onValidationLiveSigningMethodChange(method, $event)"
-                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
                       <label [for]="'val-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
                     </div>
                   }
@@ -516,6 +512,16 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           </div>
         }
     </div>
+
+    <!-- Reset Button below all filters -->
+    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+        <button 
+          (click)="resetFilters()"
+          class="w-full sm:w-auto bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 text-sm disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 disabled:cursor-not-allowed"
+          [disabled]="!isAnyFilterActive()">
+          Reset Filters
+        </button>
+  </div>
 
   </div>
 
