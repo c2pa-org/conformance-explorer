@@ -34,6 +34,7 @@ describe('ProductListComponent', () => {
     conformanceProgramVersion: '0.1',
     status: 'conformant',
     lastModification: '2023-01-01',
+    searchBlob: `Vendor ${dn || id} Product ${dn || id} OU ${dn || id} ${dn || `CN=Product ${id}, O=Vendor ${id}, C=US`} Generator conformant 2.2 0.1`.toLowerCase(),
   });
 
   beforeEach(async () => {

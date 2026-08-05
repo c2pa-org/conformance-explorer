@@ -37,6 +37,7 @@ export interface Product {
   status: string;
   lastModification: string;
   assuranceLevelValue: number | null;
+  searchBlob: string;
 }
 
 export interface GroupedProduct {

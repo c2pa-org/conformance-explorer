@@ -916,7 +916,7 @@ export class ProductListComponent {
     const genFormats = this.selectedGenerationFormats();
     const valFormats = this.selectedValidationFormats();
     const sort = this.sortOrder();
-    const term = this.searchTerm().toLowerCase();
+    const term = this.searchTerm().trim().toLowerCase();
     const status = this.selectedStatus();
 
     const genLiveEncaps = this.selectedGenerationLiveEncapsulations();
@@ -924,48 +924,41 @@ export class ProductListComponent {
     const valLiveEncaps = this.selectedValidationLiveEncapsulations();
     const valLiveMethods = this.selectedValidationLiveSigningMethods();
 
+    const genMediaArr = genMediaTypes.size > 0 ? Array.from(genMediaTypes) : [];
+    const valMediaArr = valMediaTypes.size > 0 ? Array.from(valMediaTypes) : [];
+    const words = term.length > 0 ? term.split(/\s+/).filter(Boolean) : [];
+
     const filtered = this.products().filter(p => {
-      const vendorMatch = vendor === '' || p.vendorName === vendor;
-      const productTypeMatch = type === '' || p.productType === type;
-      const assuranceLevelMatch = level === '' || p.assuranceLevel === level;
-      const statusMatch = status === '' || p.status === status;
-      const specVersionMatch = specVer === '' || p.specVersions?.includes(specVer);
-      const programVersionMatch = progVer === '' || p.conformanceProgramVersion === progVer;
-      
-      const genMediaTypesMatch = genMediaTypes.size === 0 || p.generationMediaTypes.some(mt => genMediaTypes.has(mt));
-      const valMediaTypesMatch = valMediaTypes.size === 0 || p.validationMediaTypes.some(mt => valMediaTypes.has(mt));
-      
-      const genFormatsMatch = genFormats.size === 0 || 
-        Array.from(genMediaTypes).some(mt => p.generationFormats[mt]?.some(f => genFormats.has(f)));
-      const valFormatsMatch = valFormats.size === 0 || 
-        Array.from(valMediaTypes).some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)));
+      // 1. Scalar exact-match filters (short-circuiting early)
+      if (vendor !== '' && p.vendorName !== vendor) return false;
+      if (type !== '' && p.productType !== type) return false;
+      if (level !== '' && p.assuranceLevel !== level) return false;
+      if (status !== '' && p.status !== status) return false;
+      if (specVer !== '' && !p.specVersions?.includes(specVer)) return false;
+      if (progVer !== '' && p.conformanceProgramVersion !== progVer) return false;
 
-      const genLiveEncapMatch = genLiveEncaps.size === 0 || (
-        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.generation && genLiveEncaps.has(e.type))
-      );
-      const genLiveMethodMatch = genLiveMethods.size === 0 || (
-        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.generation && e.methods?.some(m => genLiveMethods.has(m)))
-      );
-      const valLiveEncapMatch = valLiveEncaps.size === 0 || (
-        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.validation && valLiveEncaps.has(e.type))
-      );
-      const valLiveMethodMatch = valLiveMethods.size === 0 || (
-        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.validation && e.methods?.some(m => valLiveMethods.has(m)))
-      );
+      // 2. Generation & Validation Media Types
+      if (genMediaTypes.size > 0 && !p.generationMediaTypes.some(mt => genMediaTypes.has(mt))) return false;
+      if (valMediaTypes.size > 0 && !p.validationMediaTypes.some(mt => valMediaTypes.has(mt))) return false;
 
-      // Advanced multi-word space-separated search term matching.
-      // Requiring each typed word to be found in at least one field of the product.
-      const words = term.split(/\s+/).filter(Boolean);
-      const searchTermMatch = words.length === 0 || words.every(word => 
-        Object.values(p).some(val => 
-          typeof val === 'string' && val.toLowerCase().includes(word)
-        ) ||
-        p.supportedMediaTypes.some(t => t.toLowerCase().includes(word)) ||
-        p.supportedFileFormats.some(format => format.toLowerCase().includes(word) || this.formatFileFormat(format).toLowerCase().includes(word)) ||
-        (p.liveVideo?.supported && ('live video'.includes(word) || p.liveVideo.encapsulations?.some(e => e.type.toLowerCase().includes(word) || e.methods.some(m => m.toLowerCase().includes(word)))))
-      );
+      // 3. Container Formats
+      if (genFormats.size > 0 && !genMediaArr.some(mt => p.generationFormats[mt]?.some(f => genFormats.has(f)))) return false;
+      if (valFormats.size > 0 && !valMediaArr.some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)))) return false;
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && genLiveEncapMatch && genLiveMethodMatch && valLiveEncapMatch && valLiveMethodMatch && searchTermMatch && statusMatch;
+      // 4. Live Video Streaming Sub-filters
+      if (genLiveEncaps.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.generation && genLiveEncaps.has(e.type)))) return false;
+      if (genLiveMethods.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.generation && e.methods?.some(m => genLiveMethods.has(m))))) return false;
+      if (valLiveEncaps.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.validation && valLiveEncaps.has(e.type)))) return false;
+      if (valLiveMethods.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.validation && e.methods?.some(m => valLiveMethods.has(m))))) return false;
+
+      // 5. Pre-indexed search blob check (O(N*W) simple string search)
+      if (words.length > 0) {
+        for (let i = 0; i < words.length; i++) {
+          if (!p.searchBlob.includes(words[i])) return false;
+        }
+      }
+
+      return true;
     });
 
     // Sort the filtered results
@@ -1196,11 +1189,18 @@ export class ProductListComponent {
     this.selectedValidationLiveSigningMethods.set(new Set());
   }
 
+  private readonly statusCache = new Map<string, string>();
+  private readonly mediaTypeCache = new Map<string, string>();
+  private readonly signalNameCache = new Map<string, string>();
+  private readonly fileFormatCache = new Map<string, string>();
+
   formatStatus(status: string): string {
     if (!status) {
       return '';
     }
-    return status
+    let cached = this.statusCache.get(status);
+    if (cached !== undefined) return cached;
+    cached = status
       .split('_')
       .map(word => {
         if (word.toLowerCase() === 'eol') {
@@ -1209,9 +1209,13 @@ export class ProductListComponent {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' - ');
+    this.statusCache.set(status, cached);
+    return cached;
   }
 
   formatMediaType(mediaType: string): string {
+    let cached = this.mediaTypeCache.get(mediaType);
+    if (cached !== undefined) return cached;
     const labels: Record<string, string> = {
       image: 'Image',
       video: 'Video',
@@ -1224,7 +1228,9 @@ export class ProductListComponent {
       fonts: 'Fonts',
       mlModel: 'ML Model',
     };
-    return labels[mediaType] || mediaType;
+    cached = labels[mediaType] || mediaType;
+    this.mediaTypeCache.set(mediaType, cached);
+    return cached;
   }
 
   hasDisallowedSignals(product: Product): boolean {
@@ -1242,13 +1248,19 @@ export class ProductListComponent {
   }
 
   formatSignalName(signal: string): string {
-    return signal
+    let cached = this.signalNameCache.get(signal);
+    if (cached !== undefined) return cached;
+    cached = signal
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase());
+    this.signalNameCache.set(signal, cached);
+    return cached;
   }
 
   formatFileFormat(format: string): string {
     if (!format) return '';
+    let cached = this.fileFormatCache.get(format);
+    if (cached !== undefined) return cached;
 
     const mapping: Record<string, string> = {
       // Image
@@ -1316,19 +1328,20 @@ export class ProductListComponent {
       'font/otf': 'otf',
     };
 
+    let res = format;
     if (mapping[format]) {
-      return mapping[format];
-    }
-
-    if (format.includes('/')) {
+      res = mapping[format];
+    } else if (format.includes('/')) {
       const subtype = format.split('/')[1];
       if (subtype.startsWith('x-')) {
-        return subtype.substring(2);
+        res = subtype.substring(2);
+      } else {
+        res = subtype;
       }
-      return subtype;
     }
 
-    return format;
+    this.fileFormatCache.set(format, res);
+    return res;
   }
 
   // Modal logic

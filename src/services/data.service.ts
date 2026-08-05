@@ -112,6 +112,30 @@ export class DataService {
       ].filter(Boolean);
       const distinguishedName = dnParts.join(', ');
 
+      const liveVideoTokens: string[] = [];
+      if (p.liveVideo?.supported) {
+        liveVideoTokens.push('live video');
+        p.liveVideo.encapsulations?.forEach(e => {
+          liveVideoTokens.push(e.type);
+          if (e.methods) liveVideoTokens.push(...e.methods);
+        });
+      }
+
+      const searchBlob = [
+        p.applicant,
+        p.product.DN.CN,
+        p.product.DN.OU || '',
+        distinguishedName,
+        friendlyProductType,
+        assuranceLevel,
+        p.status,
+        p.conformanceProgramVersion || '',
+        ...(p.specVersion || []),
+        ...Array.from(allFormats),
+        ...Array.from(allMediaTypes),
+        ...liveVideoTokens,
+      ].join(' ').toLowerCase();
+
       return {
         recordId: p.recordId,
         vendorName: p.applicant,
@@ -139,6 +163,7 @@ export class DataService {
         status: p.status,
         lastModification: p.dates.lastModification,
         assuranceLevelValue: p.product.assurance?.maxAssuranceLevel ?? null,
+        searchBlob: searchBlob,
       };
     });
   });
