@@ -62,8 +62,8 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             
             <div class="p-4 space-y-6">
               <!-- Product Info URL Section (Always Present) -->
-              <div class="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-2 text-xs">
-                <div class="flex items-center gap-2">
+              <div class="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2 text-xs">
+                <div class="flex items-center gap-1.5 shrink-0">
                   <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                   <span class="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Product Info URL:</span>
                 </div>
@@ -74,7 +74,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     </a>
                   } @else {
-                    <span class="text-slate-400 dark:text-slate-500 italic">None provided</span>
+                    <span class="text-slate-400 dark:text-slate-500 italic font-medium">None provided</span>
                   }
                 </div>
               </div>
@@ -83,17 +83,29 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 <div>
                   <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Version & Specs</h5>
                   <dl class="space-y-1.5 text-sm">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Program Version:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceProgramVersion }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifests:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-medium">
+                        @if (product.supportsCompressedManifests === true) {
+                          <span class="text-green-700 dark:text-green-400 font-bold">Yes</span>
+                        } @else if (product.supportsCompressedManifests === false) {
+                          <span class="text-slate-700 dark:text-slate-300 font-medium">No</span>
+                        } @else {
+                          <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
+                        }
+                      </dd>
                     </div>
                   </dl>
                 </div>
@@ -118,29 +130,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 <div>
                   <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Dates</h5>
                   <dl class="space-y-1 text-sm">
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Conformance:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceDate | date:'shortDate' }}</dd>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Created:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.creationDate | date:'shortDate' }}</dd>
                     </div>
                   </dl>
-                </div>
-              </div>
-
-              <!-- Supports Compressed Manifests Section (Separated) -->
-              <div class="pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-                <span class="font-semibold text-slate-600 dark:text-slate-400">Supports Compressed Manifests</span>
-                <div>
-                  @if (product.supportsCompressedManifests === true) {
-                    <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 font-bold px-2.5 py-1 rounded-md">Yes</span>
-                  } @else if (product.supportsCompressedManifests === false) {
-                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-2.5 py-1 rounded-md">No</span>
-                  } @else {
-                    <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
-                  }
                 </div>
               </div>
 
