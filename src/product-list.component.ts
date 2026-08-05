@@ -370,10 +370,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
         </div>
 
-        <!-- Generation File Format Subsection -->
-        @if (selectedGenerationMediaTypes().size > 0) {
+        <!-- Generation Container Formats Subsection -->
+        @if (availableGenerationFileFormats().length > 0) {
           <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Generation File Formats (shows formats that match <span class="font-bold">any</span> selected generation type)</label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Generation Container Formats <span class="text-slate-400 dark:text-slate-500">(shows formats that match <span class="font-bold">any</span> selected generation type)</span>
+            </label>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 @for (format of availableGenerationFileFormats(); track format) {
                 <div class="flex items-center">
@@ -386,6 +388,48 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     <label [for]="'gen-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ formatFileFormat(format) }}</label>
                 </div>
                 }
+            </div>
+          </div>
+        }
+
+        <!-- Live Video Generation Sub-section -->
+        @if (selectedGenerationMediaTypes().has('liveVideo')) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
+            <span class="block text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Live Video Streaming Generation</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50/50 dark:bg-purple-950/20 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (encap of schemaLiveVideoEncapsulations; track encap) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'gen-live-encap-' + encap"
+                        [checked]="selectedGenerationLiveEncapsulations().has(encap)"
+                        (change)="onGenerationLiveEncapChange(encap, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                      <label [for]="'gen-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Signing Method:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (method of schemaLiveVideoSigningMethods; track method) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'gen-live-method-' + method"
+                        [checked]="selectedGenerationLiveSigningMethods().has(method)"
+                        (change)="onGenerationLiveSigningMethodChange(method, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                      <label [for]="'gen-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
         }
@@ -408,10 +452,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
         </div>
 
-        <!-- Validation File Format Subsection -->
-        @if (selectedValidationMediaTypes().size > 0) {
+        <!-- Validation Container Formats Subsection -->
+        @if (availableValidationFileFormats().length > 0) {
           <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Validation File Formats (shows formats that match <span class="font-bold">any</span> selected validation type)</label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Validation Container Formats <span class="text-slate-400 dark:text-slate-500">(shows formats that match <span class="font-bold">any</span> selected validation type)</span>
+            </label>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 @for (format of availableValidationFileFormats(); track format) {
                 <div class="flex items-center">
@@ -424,6 +470,48 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     <label [for]="'val-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ formatFileFormat(format) }}</label>
                 </div>
                 }
+            </div>
+          </div>
+        }
+
+        <!-- Live Video Validation Sub-section -->
+        @if (selectedValidationMediaTypes().has('liveVideo')) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
+            <span class="block text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Live Video Streaming Validation</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50/50 dark:bg-purple-950/20 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (encap of schemaLiveVideoEncapsulations; track encap) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'val-live-encap-' + encap"
+                        [checked]="selectedValidationLiveEncapsulations().has(encap)"
+                        (change)="onValidationLiveEncapChange(encap, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                      <label [for]="'val-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Signing Method:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (method of schemaLiveVideoSigningMethods; track method) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'val-live-method-' + method"
+                        [checked]="selectedValidationLiveSigningMethods().has(method)"
+                        (change)="onValidationLiveSigningMethodChange(method, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-purple-600 focus:ring-purple-500">
+                      <label [for]="'val-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
         }
@@ -574,6 +662,13 @@ export class ProductListComponent {
   selectedStatus = signal('');
   selectedSpecVersion = signal('');
   selectedProgramVersion = signal('');
+  selectedGenerationLiveEncapsulations = signal<Set<string>>(new Set());
+  selectedGenerationLiveSigningMethods = signal<Set<string>>(new Set());
+  selectedValidationLiveEncapsulations = signal<Set<string>>(new Set());
+  selectedValidationLiveSigningMethods = signal<Set<string>>(new Set());
+
+  public readonly schemaLiveVideoEncapsulations = ['fMP4', 'CMAF'];
+  public readonly schemaLiveVideoSigningMethods = ['per-segment', 'verifiable-segment-info'];
 
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
@@ -656,6 +751,20 @@ export class ProductListComponent {
     }
   });
 
+  private clearGenerationLiveVideoEffect = effect(() => {
+    if (!this.selectedGenerationMediaTypes().has('liveVideo')) {
+      this.selectedGenerationLiveEncapsulations.set(new Set());
+      this.selectedGenerationLiveSigningMethods.set(new Set());
+    }
+  });
+
+  private clearValidationLiveVideoEffect = effect(() => {
+    if (!this.selectedValidationMediaTypes().has('liveVideo')) {
+      this.selectedValidationLiveEncapsulations.set(new Set());
+      this.selectedValidationLiveSigningMethods.set(new Set());
+    }
+  });
+
   // A list of all possible media types for the filter UI.
   public readonly mediaTypesForDisplay = [
     { key: 'image', label: 'Image' },
@@ -708,12 +817,6 @@ export class ProductListComponent {
       'video/quicktime',
       'video/x-bmff-based',
       'video/x-riff-based',
-    ],
-    liveVideo: [
-      'fMP4',
-      'CMAF',
-      'per-segment',
-      'verifiable-segment-info',
     ],
     audio: [
       'audio/flac',
@@ -816,6 +919,11 @@ export class ProductListComponent {
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
 
+    const genLiveEncaps = this.selectedGenerationLiveEncapsulations();
+    const genLiveMethods = this.selectedGenerationLiveSigningMethods();
+    const valLiveEncaps = this.selectedValidationLiveEncapsulations();
+    const valLiveMethods = this.selectedValidationLiveSigningMethods();
+
     const filtered = this.products().filter(p => {
       const vendorMatch = vendor === '' || p.vendorName === vendor;
       const productTypeMatch = type === '' || p.productType === type;
@@ -832,6 +940,19 @@ export class ProductListComponent {
       const valFormatsMatch = valFormats.size === 0 || 
         Array.from(valMediaTypes).some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)));
 
+      const genLiveEncapMatch = genLiveEncaps.size === 0 || (
+        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.generation && genLiveEncaps.has(e.type))
+      );
+      const genLiveMethodMatch = genLiveMethods.size === 0 || (
+        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.generation && e.methods?.some(m => genLiveMethods.has(m)))
+      );
+      const valLiveEncapMatch = valLiveEncaps.size === 0 || (
+        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.validation && valLiveEncaps.has(e.type))
+      );
+      const valLiveMethodMatch = valLiveMethods.size === 0 || (
+        p.liveVideo?.supported === true && p.liveVideo.encapsulations?.some(e => e.validation && e.methods?.some(m => valLiveMethods.has(m)))
+      );
+
       // Advanced multi-word space-separated search term matching.
       // Requiring each typed word to be found in at least one field of the product.
       const words = term.split(/\s+/).filter(Boolean);
@@ -844,7 +965,7 @@ export class ProductListComponent {
         (p.liveVideo?.supported && ('live video'.includes(word) || p.liveVideo.encapsulations?.some(e => e.type.toLowerCase().includes(word) || e.methods.some(m => m.toLowerCase().includes(word)))))
       );
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && genLiveEncapMatch && genLiveMethodMatch && valLiveEncapMatch && valLiveMethodMatch && searchTermMatch && statusMatch;
     });
 
     // Sort the filtered results
@@ -928,6 +1049,10 @@ export class ProductListComponent {
            this.selectedValidationMediaTypes().size > 0 ||
            this.selectedGenerationFormats().size > 0 ||
            this.selectedValidationFormats().size > 0 ||
+           this.selectedGenerationLiveEncapsulations().size > 0 ||
+           this.selectedGenerationLiveSigningMethods().size > 0 ||
+           this.selectedValidationLiveEncapsulations().size > 0 ||
+           this.selectedValidationLiveSigningMethods().size > 0 ||
            this.searchTerm() !== '';
   });
 
@@ -1016,6 +1141,42 @@ export class ProductListComponent {
     });
   }
 
+  onGenerationLiveEncapChange(encap: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedGenerationLiveEncapsulations.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(encap); else set.delete(encap);
+      return set;
+    });
+  }
+
+  onGenerationLiveSigningMethodChange(method: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedGenerationLiveSigningMethods.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(method); else set.delete(method);
+      return set;
+    });
+  }
+
+  onValidationLiveEncapChange(encap: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedValidationLiveEncapsulations.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(encap); else set.delete(encap);
+      return set;
+    });
+  }
+
+  onValidationLiveSigningMethodChange(method: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedValidationLiveSigningMethods.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(method); else set.delete(method);
+      return set;
+    });
+  }
+
   resetFilters(): void {
     this.selectedVendor.set('');
     this.selectedProductType.set('');
@@ -1029,6 +1190,10 @@ export class ProductListComponent {
     this.selectedValidationMediaTypes.set(new Set());
     this.selectedGenerationFormats.set(new Set());
     this.selectedValidationFormats.set(new Set());
+    this.selectedGenerationLiveEncapsulations.set(new Set());
+    this.selectedGenerationLiveSigningMethods.set(new Set());
+    this.selectedValidationLiveEncapsulations.set(new Set());
+    this.selectedValidationLiveSigningMethods.set(new Set());
   }
 
   formatStatus(status: string): string {

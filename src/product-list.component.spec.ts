@@ -260,4 +260,37 @@ describe('ProductListComponent', () => {
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('p2');
   });
+
+  it('should filter products by Live Video Container Encapsulation and Signing Method', () => {
+    const prod1 = {
+      ...createMockProduct(1, 'p1'),
+      generationMediaTypes: ['liveVideo'],
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'fMP4', methods: ['per-segment'], generation: true }],
+      },
+    };
+    const prod2 = {
+      ...createMockProduct(1, 'p2'),
+      generationMediaTypes: ['liveVideo'],
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'CMAF', methods: ['verifiable-segment-info'], generation: true }],
+      },
+    };
+    mockDataService.products?.set([prod1, prod2]);
+    fixture.detectChanges();
+
+    component.selectedGenerationMediaTypes.set(new Set(['liveVideo']));
+    component.selectedGenerationLiveEncapsulations.set(new Set(['fMP4']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
+
+    component.selectedGenerationLiveEncapsulations.set(new Set());
+    component.selectedGenerationLiveSigningMethods.set(new Set(['verifiable-segment-info']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
+  });
 });
