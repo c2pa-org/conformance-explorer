@@ -343,22 +343,6 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           }
         </select>
       </div>
-      <!-- Filter by Live Video -->
-      <div>
-        <label for="live-video" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Live Video</label>
-        <select
-          id="live-video"
-          [ngModel]="selectedLiveVideo()"
-          (ngModelChange)="onLiveVideoChange($event)"
-          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-          <option value="">All Live Video</option>
-          <option value="supported">Supports Live Video</option>
-          <option value="fMP4">Format: fMP4</option>
-          <option value="CMAF">Format: CMAF</option>
-          <option value="per-segment">Method: per-segment</option>
-          <option value="verifiable-segment-info">Method: verifiable-segment-info</option>
-        </select>
-      </div>
     </div>
     <!-- Reset Button -->
     <div class="mt-4 flex justify-end">
@@ -590,7 +574,6 @@ export class ProductListComponent {
   selectedStatus = signal('');
   selectedSpecVersion = signal('');
   selectedProgramVersion = signal('');
-  selectedLiveVideo = signal('');
 
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
@@ -677,6 +660,7 @@ export class ProductListComponent {
   public readonly mediaTypesForDisplay = [
     { key: 'image', label: 'Image' },
     { key: 'video', label: 'Video' },
+    { key: 'liveVideo', label: 'Live Video' },
     { key: 'audio', label: 'Audio' },
     { key: 'textHtml', label: 'HTML Text' },
     { key: 'textUnstructured', label: 'Unstructured Text' },
@@ -765,7 +749,6 @@ export class ProductListComponent {
     const level = this.selectedAssuranceLevel();
     const specVer = this.selectedSpecVersion();
     const progVer = this.selectedProgramVersion();
-    const liveVidOption = this.selectedLiveVideo();
     const genMediaTypes = this.selectedGenerationMediaTypes();
     const valMediaTypes = this.selectedValidationMediaTypes();
     const genFormats = this.selectedGenerationFormats();
@@ -782,17 +765,6 @@ export class ProductListComponent {
       const specVersionMatch = specVer === '' || p.specVersions?.includes(specVer);
       const programVersionMatch = progVer === '' || p.conformanceProgramVersion === progVer;
       
-      let liveVideoMatch = true;
-      if (liveVidOption === 'supported') {
-        liveVideoMatch = p.liveVideo?.supported === true;
-      } else if (liveVidOption === 'fMP4' || liveVidOption === 'CMAF') {
-        liveVideoMatch = p.liveVideo?.supported === true && 
-          p.liveVideo?.encapsulations?.some(e => e.type === liveVidOption) === true;
-      } else if (liveVidOption === 'per-segment' || liveVidOption === 'verifiable-segment-info') {
-        liveVideoMatch = p.liveVideo?.supported === true && 
-          p.liveVideo?.encapsulations?.some(e => e.methods?.includes(liveVidOption)) === true;
-      }
-
       const genMediaTypesMatch = genMediaTypes.size === 0 || p.generationMediaTypes.some(mt => genMediaTypes.has(mt));
       const valMediaTypesMatch = valMediaTypes.size === 0 || p.validationMediaTypes.some(mt => valMediaTypes.has(mt));
       
@@ -813,7 +785,7 @@ export class ProductListComponent {
         (p.liveVideo?.supported && ('live video'.includes(word) || p.liveVideo.encapsulations?.some(e => e.type.toLowerCase().includes(word) || e.methods.some(m => m.toLowerCase().includes(word)))))
       );
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && liveVideoMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
+      return vendorMatch && productTypeMatch && assuranceLevelMatch && specVersionMatch && programVersionMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
     });
 
     // Sort the filtered results
@@ -893,7 +865,6 @@ export class ProductListComponent {
            this.selectedStatus() !== '' ||
            this.selectedSpecVersion() !== '' ||
            this.selectedProgramVersion() !== '' ||
-           this.selectedLiveVideo() !== '' ||
            this.selectedGenerationMediaTypes().size > 0 ||
            this.selectedValidationMediaTypes().size > 0 ||
            this.selectedGenerationFormats().size > 0 ||
@@ -924,10 +895,6 @@ export class ProductListComponent {
 
   onProgramVersionChange(value: string): void {
     this.selectedProgramVersion.set(value);
-  }
-
-  onLiveVideoChange(value: string): void {
-    this.selectedLiveVideo.set(value);
   }
 
   onSearchTermChange(value: string): void {
@@ -997,7 +964,6 @@ export class ProductListComponent {
     this.selectedStatus.set('');
     this.selectedSpecVersion.set('');
     this.selectedProgramVersion.set('');
-    this.selectedLiveVideo.set('');
     this.searchTerm.set('');
     this.sortOrder.set('conformanceDateDesc');
     this.selectedGenerationMediaTypes.set(new Set());
@@ -1025,6 +991,7 @@ export class ProductListComponent {
     const labels: Record<string, string> = {
       image: 'Image',
       video: 'Video',
+      liveVideo: 'Live Video',
       audio: 'Audio',
       textHtml: 'HTML Text',
       textUnstructured: 'Unstructured Text',

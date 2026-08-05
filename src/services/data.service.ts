@@ -43,6 +43,31 @@ export class DataService {
       processContainer(p.containers?.generate, generationFormats, generationMediaTypesSet);
       processContainer(p.containers?.validate, validationFormats, validationMediaTypesSet);
 
+      if (p.liveVideo?.supported) {
+        if (p.liveVideo.encapsulations && p.liveVideo.encapsulations.length > 0) {
+          p.liveVideo.encapsulations.forEach(encap => {
+            const formatName = encap.type;
+            if (encap.generation) {
+              generationMediaTypesSet.add('liveVideo');
+              if (!generationFormats['liveVideo']) generationFormats['liveVideo'] = [];
+              if (!generationFormats['liveVideo'].includes(formatName)) {
+                generationFormats['liveVideo'].push(formatName);
+              }
+            }
+            if (encap.validation) {
+              validationMediaTypesSet.add('liveVideo');
+              if (!validationFormats['liveVideo']) validationFormats['liveVideo'] = [];
+              if (!validationFormats['liveVideo'].includes(formatName)) {
+                validationFormats['liveVideo'].push(formatName);
+              }
+            }
+          });
+        } else {
+          generationMediaTypesSet.add('liveVideo');
+          validationMediaTypesSet.add('liveVideo');
+        }
+      }
+
       // Create the combined properties for filtering from the separate ones.
       const allFormats = new Set<string>();
       const allMediaTypes = new Set<string>(generationMediaTypesSet);

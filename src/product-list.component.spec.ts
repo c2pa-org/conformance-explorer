@@ -223,9 +223,11 @@ describe('ProductListComponent', () => {
     expect(component.filteredProducts()[0].recordId).toBe('p1');
   });
 
-  it('should filter products by live video options', () => {
+  it('should filter products by live video generation and validation media types', () => {
     const prod1 = {
       ...createMockProduct(1, 'p1'),
+      generationMediaTypes: ['liveVideo'],
+      generationFormats: { liveVideo: ['fMP4'] },
       liveVideo: {
         supported: true,
         encapsulations: [{ type: 'fMP4', methods: ['per-segment'], generation: true }],
@@ -233,6 +235,8 @@ describe('ProductListComponent', () => {
     };
     const prod2 = {
       ...createMockProduct(1, 'p2'),
+      validationMediaTypes: ['liveVideo'],
+      validationFormats: { liveVideo: ['CMAF'] },
       liveVideo: {
         supported: true,
         encapsulations: [{ type: 'CMAF', methods: ['verifiable-segment-info'], validation: true }],
@@ -245,16 +249,13 @@ describe('ProductListComponent', () => {
     mockDataService.products?.set([prod1, prod2, prod3]);
     fixture.detectChanges();
 
-    component.selectedLiveVideo.set('supported');
-    fixture.detectChanges();
-    expect(component.filteredProducts().length).toBe(2);
-
-    component.selectedLiveVideo.set('fMP4');
+    component.selectedGenerationMediaTypes.set(new Set(['liveVideo']));
     fixture.detectChanges();
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('p1');
 
-    component.selectedLiveVideo.set('verifiable-segment-info');
+    component.selectedGenerationMediaTypes.set(new Set());
+    component.selectedValidationMediaTypes.set(new Set(['liveVideo']));
     fixture.detectChanges();
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('p2');
