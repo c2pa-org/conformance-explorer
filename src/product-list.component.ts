@@ -87,13 +87,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                       <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
                       <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
                     </div>
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
-                    </div>
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Program Version:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceProgramVersion }}</dd>
+                    <div class="my-2 py-1.5 border-y border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
+                      <div class="flex justify-between gap-4">
+                        <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
+                        <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
+                      </div>
+                      <div class="flex justify-between gap-4">
+                        <dt class="text-slate-500 dark:text-slate-400">Program Version:</dt>
+                        <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceProgramVersion }}</dd>
+                      </div>
                     </div>
                     <div class="flex justify-between gap-4">
                       <dt class="text-slate-500 dark:text-slate-400">Compressed Manifests:</dt>
