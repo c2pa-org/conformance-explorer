@@ -79,38 +79,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 </div>
               </div>
 
-              <!-- At-a-Glance Key Metrics Summary Strip -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 dark:bg-slate-700/80 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 text-center text-xs">
-                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
-                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">C2PA Specs</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.specVersions.join(', ') }}</div>
-                </div>
-                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
-                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Assurance Level</div>
-                  <div class="flex items-center justify-center gap-1 mt-1">
-                    @if (product.assuranceLevelValue; as level) {
-                      <div class="flex items-center gap-1">
-                        @for (i of [1, 2, 3, 4]; track i) {
-                          <span class="h-2 w-2 rounded-full" [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
-                        }
-                      </div>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 ml-1">{{ product.assuranceLevel }}</span>
-                    } @else {
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ product.assuranceLevel }}</span>
-                    }
-                  </div>
-                </div>
-                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
-                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Min Product Version</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.productVersion }}</div>
-                </div>
-                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
-                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Program Version</div>
-                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.conformanceProgramVersion }}</div>
-                </div>
-              </div>
-
-              <!-- Domain Card 1: Specification Standards & Security -->
+              <!-- Specification Standards & Security Governance -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
                   <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
