@@ -60,7 +60,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
               </div>
             </div>
             
-            <div class="p-4 space-y-6">
+            <div class="p-4 space-y-5">
               <!-- Product Info URL Section (Always Present) -->
               <div class="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2 text-xs">
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -79,27 +79,82 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Version & Specs</h5>
-                  <dl class="space-y-1.5 text-sm">
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
-                    </div>
-                    <div class="my-2 py-1.5 border-y border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
-                      <div class="flex justify-between gap-4">
-                        <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
-                        <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
+              <!-- At-a-Glance Key Metrics Summary Strip -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 dark:bg-slate-700/80 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 text-center text-xs">
+                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">C2PA Specs</div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.specVersions.join(', ') }}</div>
+                </div>
+                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Assurance Level</div>
+                  <div class="flex items-center justify-center gap-1 mt-1">
+                    @if (product.assuranceLevelValue; as level) {
+                      <div class="flex items-center gap-1">
+                        @for (i of [1, 2, 3, 4]; track i) {
+                          <span class="h-2 w-2 rounded-full" [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
+                        }
                       </div>
-                      <div class="flex justify-between gap-4">
-                        <dt class="text-slate-500 dark:text-slate-400">Program Version:</dt>
-                        <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceProgramVersion }}</dd>
-                      </div>
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 ml-1">{{ product.assuranceLevel }}</span>
+                    } @else {
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ product.assuranceLevel }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Min Product Version</div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.productVersion }}</div>
+                </div>
+                <div class="p-2.5 bg-slate-50 dark:bg-slate-900/80">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Program Version</div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">{{ product.conformanceProgramVersion }}</div>
+                </div>
+              </div>
+
+              <!-- Domain Card 1: Specification Standards & Security -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Specification & Standards Governance</span>
+                  </h5>
+                  <dl class="space-y-1.5 text-xs">
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Supported C2PA Spec(s):</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">{{ product.specVersions.join(', ') }}</dd>
                     </div>
                     <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifests:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">
+                      <dt class="text-slate-500 dark:text-slate-400">Conformance Program Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">{{ product.conformanceProgramVersion }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Minimum Eligible Product Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold font-mono">{{ product.productVersion }}</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <span>Security Assurance & Attestation</span>
+                  </h5>
+                  <dl class="space-y-1.5 text-xs">
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Max Assurance Level:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1.5">
+                        @if (product.assuranceLevelValue; as level) {
+                          <div class="flex items-center gap-1">
+                            @for (i of [1, 2, 3, 4]; track i) {
+                              <span class="h-2 w-2 rounded-full" [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
+                            }
+                          </div>
+                        }
+                        <span>{{ product.assuranceLevel }}</span>
+                      </dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifest Encoding:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">
                         @if (product.supportsCompressedManifests === true) {
                           <span class="text-green-700 dark:text-green-400 font-bold">Yes</span>
                         } @else if (product.supportsCompressedManifests === false) {
@@ -111,47 +166,17 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     </div>
                   </dl>
                 </div>
-                
-                <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Assurance</h5>
-                  <div class="flex items-center gap-2">
-                    @if (product.assuranceLevelValue; as level) {
-                      <div class="flex items-center gap-1">
-                        @for (i of [1, 2, 3, 4]; track i) {
-                          <span class="h-2 w-2 rounded-full"
-                                [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
-                        }
-                      </div>
-                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
-                    } @else {
-                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
-                    }
-                  </div>
-                </div>
-
-                <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Dates</h5>
-                  <dl class="space-y-1 text-sm">
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Conformance:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceDate | date:'shortDate' }}</dd>
-                    </div>
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Created:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.creationDate | date:'shortDate' }}</dd>
-                    </div>
-                  </dl>
-                </div>
               </div>
 
+              <!-- Domain Card 2: Claim Media Containers & Streaming -->
               <div>
-                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Media Types & Formats</h5>
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Claim Media Containers & Streaming</h5>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Generation Box -->
+                  <!-- Claim Generation Containers -->
                   <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                       <ng-icon name="heroCog" class="text-slate-400"></ng-icon>
-                      <span>Generation</span>
+                      <span>Claim Generation Containers</span>
                     </div>
                     @if (product.generationMediaTypes && product.generationMediaTypes.length > 0) {
                       <div class="space-y-3">
@@ -171,11 +196,11 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     }
                   </div>
 
-                  <!-- Validation Box -->
+                  <!-- Claim Validation Containers -->
                   <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                       <ng-icon name="heroCheckCircle" class="text-slate-400"></ng-icon>
-                      <span>Validation</span>
+                      <span>Claim Validation Containers</span>
                     </div>
                     @if (product.validationMediaTypes && product.validationMediaTypes.length > 0) {
                       <div class="space-y-3">
@@ -195,43 +220,70 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     }
                   </div>
                 </div>
+
+                <!-- Live Video Streaming Section (if supported) -->
+                @if (product.liveVideo?.supported) {
+                  <div class="mt-3 bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                    <div class="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                      <span class="font-bold uppercase text-[11px] text-slate-600 dark:text-slate-400 tracking-wider">Live Video Streaming</span>
+                      <span class="bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Supported</span>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                      @for (encap of product.liveVideo?.encapsulations; track encap.type) {
+                        <div class="flex flex-wrap justify-between items-center gap-2 bg-white dark:bg-slate-800/80 p-2.5 rounded border border-slate-200 dark:border-slate-700">
+                          <span class="font-bold text-slate-700 dark:text-slate-200">{{ encap.type }}</span>
+                          <div class="flex items-center gap-1.5">
+                            @if (encap.generation) { <span class="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Generation</span> }
+                            @if (encap.validation) { <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Validation</span> }
+                          </div>
+                          <div class="w-full text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+                            Signing Methods: <span class="font-mono text-slate-700 dark:text-slate-300">{{ encap.methods.join(', ') }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
 
-              <!-- Disallowed Signals Section -->
+              <!-- Domain Card 3: Disallowed Inception & Transformation Signals (if present) -->
               @if (hasDisallowedSignals(product)) {
-                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Disallowed Signals</h5>
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>🚫</span>
+                    <span>Disallowed Inception & Transformation Signals</span>
+                  </h5>
                   <div class="flex flex-wrap gap-2">
                     @for (signal of getDisallowedSignalsList(product); track signal) {
-                      <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-200 dark:border-amber-800/50 flex items-center gap-1">
-                        <span>🚫</span>
-                        <span>{{ formatSignalName(signal) }}</span>
+                      <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-200 dark:border-amber-800/50">
+                        {{ formatSignalName(signal) }}
                       </span>
                     }
                   </div>
                 </div>
               }
 
-              <!-- Live Video Support Section -->
-              @if (product.liveVideo?.supported) {
-                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Live Video Support</h5>
-                  <div class="space-y-2">
-                    @for (encap of product.liveVideo?.encapsulations; track encap.type) {
-                      <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-xs flex flex-wrap justify-between items-center gap-2">
-                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ encap.type }}</span>
-                        <div class="flex items-center gap-1.5">
-                          @if (encap.generation) { <span class="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Generation</span> }
-                          @if (encap.validation) { <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Validation</span> }
-                        </div>
-                        <div class="w-full text-slate-500 dark:text-slate-400 text-[11px] mt-1">
-                          Methods: <span class="font-mono text-slate-700 dark:text-slate-300">{{ encap.methods.join(', ') }}</span>
-                        </div>
-                      </div>
-                    }
+              <!-- Domain Card 4: Record Lifecycle & Audit Trail -->
+              <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <span>Record Lifecycle & Audit Trail</span>
+                </h5>
+                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Conformance Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.conformanceDate | date:'shortDate' }}</dd>
                   </div>
-                </div>
-              }
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Creation Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.creationDate | date:'shortDate' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Last Modified Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.lastModification | date:'shortDate' }}</dd>
+                  </div>
+                </dl>
+              </div>
             </div>
           </div>
         }
