@@ -130,7 +130,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Supported Media Containers & Streams</h5>
                 
                 <!-- Compressed Manifest Support Bar -->
-                <div class="mb-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                <div class="mb-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs">
                   <span class="font-medium text-slate-600 dark:text-slate-400">Supports Compressed Manifests:</span>
                   <span class="font-bold">
                     @if (product.supportsCompressedManifests === true) {
