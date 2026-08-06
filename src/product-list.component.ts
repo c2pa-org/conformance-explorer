@@ -121,25 +121,27 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                         <span>{{ product.assuranceLevel }}</span>
                       </dd>
                     </div>
-                    <div class="flex justify-between gap-4">
-                      <dt class="text-slate-500 dark:text-slate-400">Compressed Manifest Encoding:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">
-                        @if (product.supportsCompressedManifests === true) {
-                          <span class="text-green-700 dark:text-green-400 font-bold">Yes</span>
-                        } @else if (product.supportsCompressedManifests === false) {
-                          <span class="text-slate-700 dark:text-slate-300 font-medium">No</span>
-                        } @else {
-                          <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
-                        }
-                      </dd>
-                    </div>
                   </dl>
                 </div>
               </div>
 
-              <!-- Domain Card 2: Claim Media Containers & Streaming -->
+              <!-- Domain Card 2: Supported Media Containers & Streams -->
               <div>
-                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Claim Media Containers & Streaming</h5>
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Supported Media Containers & Streams</h5>
+                
+                <!-- Compressed Manifest Support Bar -->
+                <div class="mb-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                  <span class="font-medium text-slate-600 dark:text-slate-400">Supports Compressed Manifests:</span>
+                  <span class="font-bold">
+                    @if (product.supportsCompressedManifests === true) {
+                      <span class="text-green-700 dark:text-green-400">Yes</span>
+                    } @else if (product.supportsCompressedManifests === false) {
+                      <span class="text-slate-700 dark:text-slate-300">No</span>
+                    } @else {
+                      <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
+                    }
+                  </span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Claim Generation Containers -->
                   <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
