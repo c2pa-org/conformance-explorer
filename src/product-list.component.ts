@@ -47,6 +47,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 <span class="text-sm font-mono text-slate-700 dark:text-slate-300">{{ product.recordId }}</span>
               </div>
               <div class="flex items-center gap-3">
+                <button
+                  (click)="copyRecordJson(product)"
+                  [title]="copiedRecordId() === product.recordId ? 'JSON Copied!' : 'Copy Conforming Product List Record JSON'"
+                  class="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-1.5 px-3 rounded-md transition-colors flex items-center gap-1.5 shadow-sm">
+                  <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>{{ copiedRecordId() === product.recordId ? 'Copied Record JSON!' : 'Copy Record JSON' }}</span>
+                </button>
                 <span
                   class="text-xs font-semibold px-2 py-1 rounded-full"
                   [ngClass]="{
@@ -1390,5 +1399,25 @@ export class ProductListComponent {
       return colors[level - 1];
     }
     return 'bg-slate-300 dark:bg-slate-600';
+  }
+
+  copiedRecordId = signal<string | null>(null);
+
+  copyRecordJson(product: Product): void {
+    const jsonContent = product.raw
+      ? JSON.stringify(product.raw, null, 2)
+      : JSON.stringify(product, null, 2);
+
+    navigator.clipboard
+      .writeText(jsonContent)
+      .then(() => {
+        this.copiedRecordId.set(product.recordId);
+        setTimeout(() => {
+          if (this.copiedRecordId() === product.recordId) {
+            this.copiedRecordId.set(null);
+          }
+        }, 2000);
+      })
+      .catch(err => console.error('Failed to copy record JSON:', err));
   }
 }

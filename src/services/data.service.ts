@@ -164,6 +164,7 @@ export class DataService {
         lastModification: p.dates.lastModification,
         assuranceLevelValue: p.product.assurance?.maxAssuranceLevel ?? null,
         searchBlob: searchBlob,
+        raw: p,
       };
     });
   });

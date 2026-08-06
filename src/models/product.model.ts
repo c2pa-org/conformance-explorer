@@ -38,6 +38,7 @@ export interface Product {
   lastModification: string;
   assuranceLevelValue: number | null;
   searchBlob: string;
+  raw?: RawProduct;
 }
 
 export interface GroupedProduct {
