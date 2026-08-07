@@ -16,7 +16,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
         <div class="flex flex-wrap justify-between items-start gap-4">
           <div>
             <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
-            <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
+            <div class="flex items-center gap-2.5 mt-0.5 flex-wrap">
+              <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
+              @for (pType of selectedGroup()?.productTypes; track pType) {
+                <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md shadow-xs">{{ pType }}</span>
+              }
+            </div>
             @if (selectedGroup()?.organizationalUnit) {
               <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
             }
