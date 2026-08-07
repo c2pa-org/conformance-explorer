@@ -31,8 +31,10 @@ describe('ProductListComponent', () => {
     creationDate: '2023-01-01',
     conformanceDate: '2023-01-01',
     specVersions: ['2.2'],
+    conformanceProgramVersion: '0.1',
     status: 'conformant',
     lastModification: '2023-01-01',
+    searchBlob: `Vendor ${dn || id} Product ${dn || id} OU ${dn || id} ${dn || `CN=Product ${id}, O=Vendor ${id}, C=US`} Generator conformant 2.2 0.1`.toLowerCase(),
   });
 
   beforeEach(async () => {
@@ -187,5 +189,109 @@ describe('ProductListComponent', () => {
 
     expect(component.filteredProducts().length).toBe(1);
     expect(component.filteredProducts()[0].recordId).toBe('prod-png');
+  });
+
+  it('should correctly format signal names and detect disallowed signals', () => {
+    const productWithSignals = {
+      ...createMockProduct(1, 'prod-signals'),
+      disallowedSignals: {
+        inception: ['capturedMedia', 'nonGenAIDigitalCreation'],
+      },
+    };
+    expect(component.hasDisallowedSignals(productWithSignals)).toBeTrue();
+    expect(component.getDisallowedSignalsList(productWithSignals)).toEqual(['capturedMedia', 'nonGenAIDigitalCreation']);
+    expect(component.formatSignalName('capturedMedia')).toBe('Captured Media');
+    expect(component.formatSignalName('nonGenAIDigitalCreation')).toBe('Non Gen A I Digital Creation');
+  });
+
+  it('should filter products by spec version and program version', () => {
+    const prod1 = { ...createMockProduct(1, 'p1'), specVersions: ['2.2'], conformanceProgramVersion: '0.1' };
+    const prod2 = { ...createMockProduct(1, 'p2'), specVersions: ['2.4'], conformanceProgramVersion: '0.2' };
+    mockDataService.products?.set([prod1, prod2]);
+    fixture.detectChanges();
+
+    expect(component.filteredProducts().length).toBe(2);
+
+    component.selectedSpecVersion.set('2.4');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
+
+    component.selectedSpecVersion.set('');
+    component.selectedProgramVersion.set('0.1');
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
+  });
+
+  it('should filter products by live video generation and validation media types', () => {
+    const prod1 = {
+      ...createMockProduct(1, 'p1'),
+      generationMediaTypes: ['liveVideo'],
+      generationFormats: { liveVideo: ['fMP4'] },
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'fMP4', methods: ['per-segment'], generation: true }],
+      },
+    };
+    const prod2 = {
+      ...createMockProduct(1, 'p2'),
+      validationMediaTypes: ['liveVideo'],
+      validationFormats: { liveVideo: ['CMAF'] },
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'CMAF', methods: ['verifiable-segment-info'], validation: true }],
+      },
+    };
+    const prod3 = {
+      ...createMockProduct(1, 'p3'),
+      liveVideo: { supported: false },
+    };
+    mockDataService.products?.set([prod1, prod2, prod3]);
+    fixture.detectChanges();
+
+    component.selectedGenerationMediaTypes.set(new Set(['liveVideo']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
+
+    component.selectedGenerationMediaTypes.set(new Set());
+    component.selectedValidationMediaTypes.set(new Set(['liveVideo']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
+  });
+
+  it('should filter products by Live Video Container Encapsulation and Signing Method', () => {
+    const prod1 = {
+      ...createMockProduct(1, 'p1'),
+      generationMediaTypes: ['liveVideo'],
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'fMP4', methods: ['per-segment'], generation: true }],
+      },
+    };
+    const prod2 = {
+      ...createMockProduct(1, 'p2'),
+      generationMediaTypes: ['liveVideo'],
+      liveVideo: {
+        supported: true,
+        encapsulations: [{ type: 'CMAF', methods: ['verifiable-segment-info'], generation: true }],
+      },
+    };
+    mockDataService.products?.set([prod1, prod2]);
+    fixture.detectChanges();
+
+    component.selectedGenerationMediaTypes.set(new Set(['liveVideo']));
+    component.selectedGenerationLiveEncapsulations.set(new Set(['fMP4']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p1');
+
+    component.selectedGenerationLiveEncapsulations.set(new Set());
+    component.selectedGenerationLiveSigningMethods.set(new Set(['verifiable-segment-info']));
+    fixture.detectChanges();
+    expect(component.filteredProducts().length).toBe(1);
+    expect(component.filteredProducts()[0].recordId).toBe('p2');
   });
 });

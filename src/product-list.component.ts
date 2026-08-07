@@ -15,11 +15,21 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeModal()">
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
       <div class="p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
-        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
-        <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
-        @if (selectedGroup()?.organizationalUnit) {
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
-        }
+        <div class="flex flex-wrap justify-between items-start gap-4">
+          <div>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ selectedGroup()?.vendorName }}</h3>
+            <p class="text-slate-600 dark:text-slate-300 font-medium text-lg">{{ selectedGroup()?.productName }}</p>
+            @if (selectedGroup()?.organizationalUnit) {
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ selectedGroup()?.organizationalUnit }}</p>
+            }
+          </div>
+          @if (selectedGroup()?.infoURL; as infoUrl) {
+            <a [href]="infoUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-lg text-xs font-bold transition-colors border border-blue-200 dark:border-blue-800">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              <span>Product Documentation</span>
+            </a>
+          }
+        </div>
         <div class="mt-2 flex items-center gap-2">
             <span class="text-xs font-mono bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded">{{ selectedGroup()?.distinguishedName }}</span>
         </div>
@@ -37,6 +47,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                 <span class="text-sm font-mono text-slate-700 dark:text-slate-300">{{ product.recordId }}</span>
               </div>
               <div class="flex items-center gap-3">
+                <button
+                  (click)="copyRecordJson(product)"
+                  [title]="copiedRecordId() === product.recordId ? 'JSON Copied!' : 'Copy Conforming Product List Record JSON'"
+                  class="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-1.5 px-3 rounded-md transition-colors flex items-center gap-1.5 shadow-sm">
+                  <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>{{ copiedRecordId() === product.recordId ? 'Copied Record JSON!' : 'Copy Record JSON' }}</span>
+                </button>
                 <span
                   class="text-xs font-semibold px-2 py-1 rounded-full"
                   [ngClass]="{
@@ -50,68 +69,100 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
               </div>
             </div>
             
-            <div class="p-4 space-y-6">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="p-4 space-y-5">
+              <!-- Product Info URL Section (Always Present) -->
+              <div class="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2 text-xs">
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                  <span class="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Product Info URL:</span>
+                </div>
                 <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Version & Specs</h5>
-                  <dl class="space-y-1 text-sm">
-                    <div class="flex justify-between">
-                      <dt class="text-slate-500 dark:text-slate-400">Min. Version:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.productVersion }}</dd>
+                  @if (product.infoURL; as link) {
+                    <a [href]="link" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline font-medium break-all flex items-center gap-1">
+                      <span>{{ link }}</span>
+                      <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                  } @else {
+                    <span class="text-slate-400 dark:text-slate-500 italic font-medium">None provided</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Specification Standards & Security Governance -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Specification & Standards Governance</span>
+                  </h5>
+                  <dl class="space-y-1.5 text-xs">
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Supported C2PA Spec(s):</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">{{ product.specVersions.join(', ') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                      <dt class="text-slate-500 dark:text-slate-400">Spec Version(s):</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.specVersions.join(', ') }}</dd>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Conformance Program Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold">{{ product.conformanceProgramVersion }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Minimum Eligible Product Version:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold font-mono">{{ product.productVersion }}</dd>
                     </div>
                   </dl>
                 </div>
-                
-                <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Assurance</h5>
-                  <div class="flex items-center gap-2">
-                    @if (product.assuranceLevelValue; as level) {
-                      <div class="flex items-center gap-1">
-                        @for (i of [1, 2, 3, 4]; track i) {
-                          <span class="h-2 w-2 rounded-full"
-                                [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
-                        }
-                      </div>
-                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
-                    } @else {
-                      <span class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ product.assuranceLevel }}</span>
-                    }
-                  </div>
-                </div>
 
-                <div>
-                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Dates</h5>
-                  <dl class="space-y-1 text-sm">
-                    <div class="flex justify-between">
-                      <dt class="text-slate-500 dark:text-slate-400">Conformance:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.conformanceDate | date:'shortDate' }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                      <dt class="text-slate-500 dark:text-slate-400">Created:</dt>
-                      <dd class="text-slate-800 dark:text-slate-200 font-medium">{{ product.creationDate | date:'shortDate' }}</dd>
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <span>Security Assurance & Attestation</span>
+                  </h5>
+                  <dl class="space-y-1.5 text-xs">
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-500 dark:text-slate-400">Max Assurance Level:</dt>
+                      <dd class="text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1.5">
+                        @if (product.assuranceLevelValue; as level) {
+                          <div class="flex items-center gap-1">
+                            @for (i of [1, 2, 3, 4]; track i) {
+                              <span class="h-2 w-2 rounded-full" [ngClass]="getAssuranceDotClass(level, i - 1)"></span>
+                            }
+                          </div>
+                        }
+                        <span>{{ product.assuranceLevel }}</span>
+                      </dd>
                     </div>
                   </dl>
                 </div>
               </div>
 
+              <!-- Domain Card 2: Supported Media Containers & Streams -->
               <div>
-                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Media Types & Formats</h5>
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Supported Media Containers & Streams</h5>
+                
+                <!-- Compressed Manifest Support Bar -->
+                <div class="mb-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs">
+                  <span class="font-medium text-slate-600 dark:text-slate-400">Supports Compressed Manifests:</span>
+                  <span class="font-bold">
+                    @if (product.supportsCompressedManifests === true) {
+                      <span class="text-green-700 dark:text-green-400">Yes</span>
+                    } @else if (product.supportsCompressedManifests === false) {
+                      <span class="text-slate-700 dark:text-slate-300">No</span>
+                    } @else {
+                      <span class="text-slate-400 dark:text-slate-500 italic">N/A</span>
+                    }
+                  </span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Generation Box -->
+                  <!-- Claim Generation Containers -->
                   <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                       <ng-icon name="heroCog" class="text-slate-400"></ng-icon>
-                      <span>Generation</span>
+                      <span>Claim Generation Containers</span>
                     </div>
                     @if (product.generationMediaTypes && product.generationMediaTypes.length > 0) {
                       <div class="space-y-3">
                         @for (mediaType of product.generationMediaTypes; track mediaType) {
                           <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{ formatMediaType(mediaType) }}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.generationFormats[mediaType]; track format) {
                                 <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
@@ -125,17 +176,17 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     }
                   </div>
 
-                  <!-- Validation Box -->
+                  <!-- Claim Validation Containers -->
                   <div class="bg-slate-100 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase mb-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                       <ng-icon name="heroCheckCircle" class="text-slate-400"></ng-icon>
-                      <span>Validation</span>
+                      <span>Claim Validation Containers</span>
                     </div>
                     @if (product.validationMediaTypes && product.validationMediaTypes.length > 0) {
                       <div class="space-y-3">
                         @for (mediaType of product.validationMediaTypes; track mediaType) {
                           <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{mediaType}}</p>
+                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 capitalize">{{ formatMediaType(mediaType) }}</p>
                             <div class="flex flex-wrap gap-1.5 mt-1">
                               @for(format of product.validationFormats[mediaType]; track format) {
                                 <span class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{{ formatFileFormat(format) }}</span>
@@ -149,6 +200,69 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     }
                   </div>
                 </div>
+
+                <!-- Live Video Streaming Section (if supported) -->
+                @if (product.liveVideo?.supported) {
+                  <div class="mt-3 bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                    <div class="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                      <span class="font-bold uppercase text-[11px] text-slate-600 dark:text-slate-400 tracking-wider">Live Video Streaming</span>
+                      <span class="bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Supported</span>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                      @for (encap of product.liveVideo?.encapsulations; track encap.type) {
+                        <div class="flex flex-wrap justify-between items-center gap-2 bg-white dark:bg-slate-800/80 p-2.5 rounded border border-slate-200 dark:border-slate-700">
+                          <span class="font-bold text-slate-700 dark:text-slate-200">{{ encap.type }}</span>
+                          <div class="flex items-center gap-1.5">
+                            @if (encap.generation) { <span class="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Generation</span> }
+                            @if (encap.validation) { <span class="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Validation</span> }
+                          </div>
+                          <div class="w-full text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+                            Signing Methods: <span class="font-mono text-slate-700 dark:text-slate-300">{{ encap.methods.join(', ') }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Domain Card 3: Disallowed Inception & Transformation Signals (if present) -->
+              @if (hasDisallowedSignals(product)) {
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>🚫</span>
+                    <span>Disallowed Inception & Transformation Signals</span>
+                  </h5>
+                  <div class="flex flex-wrap gap-2">
+                    @for (signal of getDisallowedSignalsList(product); track signal) {
+                      <span class="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-200 dark:border-amber-800/50">
+                        {{ formatSignalName(signal) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Domain Card 4: Record Lifecycle & Audit Trail -->
+              <div class="bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                <h5 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <span>Record Lifecycle & Audit Trail</span>
+                </h5>
+                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Conformance Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.conformanceDate | date:'shortDate' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Creation Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.creationDate | date:'shortDate' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Last Modified Date:</dt>
+                    <dd class="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{{ product.lastModification | date:'shortDate' }}</dd>
+                  </div>
+                </dl>
               </div>
             </div>
           </div>
@@ -178,7 +292,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
         />
       </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <!-- Filter by Vendor -->
       <div>
         <label for="vendor" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Vendor</label>
@@ -235,16 +349,36 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
           }
         </select>
       </div>
+      <!-- Filter by Spec Version -->
+      <div>
+        <label for="spec-version" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Spec Version</label>
+        <select
+          id="spec-version"
+          [ngModel]="selectedSpecVersion()"
+          (ngModelChange)="onSpecVersionChange($event)"
+          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+          <option value="">All Spec Versions</option>
+          @for (version of specVersionsOptions(); track version) {
+            <option [value]="version">{{ version }}</option>
+          }
+        </select>
+      </div>
+      <!-- Filter by Program Version -->
+      <div>
+        <label for="program-version" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Program Version</label>
+        <select
+          id="program-version"
+          [ngModel]="selectedProgramVersion()"
+          (ngModelChange)="onProgramVersionChange($event)"
+          class="mt-1 block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-slate-400 focus:ring focus:ring-slate-300 focus:ring-opacity-50 text-sm py-2 px-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+       <option value="">All Program Versions</option>
+          @for (version of programVersionsOptions(); track version) {
+            <option [value]="version">{{ version }}</option>
+          }
+        </select>
+      </div>
     </div>
-    <!-- Reset Button -->
-    <div class="mt-4 flex justify-end">
-        <button 
-          (click)="resetFilters()"
-          class="w-full sm:w-auto bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 text-sm disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 disabled:cursor-not-allowed"
-          [disabled]="!isAnyFilterActive()">
-          Reset Filters
-        </button>
-    </div>
+
     <!-- Generation Media Type Filters -->
     <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Generation Media Types (select all that apply)</label>
@@ -262,10 +396,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
         </div>
 
-        <!-- Generation File Format Subsection -->
-        @if (selectedGenerationMediaTypes().size > 0) {
+        <!-- Generation Container Formats Subsection -->
+        @if (availableGenerationFileFormats().length > 0) {
           <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Generation File Formats (shows formats that match <span class="font-bold">any</span> selected generation type)</label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Generation Container Formats <span class="text-slate-400 dark:text-slate-500">(shows formats that match <span class="font-bold">any</span> selected generation type)</span>
+            </label>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 @for (format of availableGenerationFileFormats(); track format) {
                 <div class="flex items-center">
@@ -278,6 +414,50 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                     <label [for]="'gen-format-' + format" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ formatFileFormat(format) }}</label>
                 </div>
                 }
+            </div>
+          </div>
+        }
+
+        <!-- Live Video Generation Sub-section -->
+        @if (selectedGenerationMediaTypes().has('liveVideo')) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Live Video Generation Streaming Details
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (encap of schemaLiveVideoEncapsulations; track encap) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'gen-live-encap-' + encap"
+                        [checked]="selectedGenerationLiveEncapsulations().has(encap)"
+                        (change)="onGenerationLiveEncapChange(encap, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                      <label [for]="'gen-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Signing Method:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (method of schemaLiveVideoSigningMethods; track method) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'gen-live-method-' + method"
+                        [checked]="selectedGenerationLiveSigningMethods().has(method)"
+                        (change)="onGenerationLiveSigningMethodChange(method, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                      <label [for]="'gen-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
         }
@@ -300,10 +480,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
         </div>
 
-        <!-- Validation File Format Subsection -->
-        @if (selectedValidationMediaTypes().size > 0) {
+        <!-- Validation Container Formats Subsection -->
+        @if (availableValidationFileFormats().length > 0) {
           <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Validation File Formats (shows formats that match <span class="font-bold">any</span> selected validation type)</label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Validation Container Formats <span class="text-slate-400 dark:text-slate-500">(shows formats that match <span class="font-bold">any</span> selected validation type)</span>
+            </label>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 @for (format of availableValidationFileFormats(); track format) {
                 <div class="flex items-center">
@@ -319,7 +501,61 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             </div>
           </div>
         }
+
+        <!-- Live Video Validation Sub-section -->
+        @if (selectedValidationMediaTypes().has('liveVideo')) {
+          <div class="mt-3 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+              Live Video Validation Streaming Details
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Container Encapsulation:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (encap of schemaLiveVideoEncapsulations; track encap) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'val-live-encap-' + encap"
+                        [checked]="selectedValidationLiveEncapsulations().has(encap)"
+                        (change)="onValidationLiveEncapChange(encap, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                      <label [for]="'val-live-encap-' + encap" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ encap }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">Signing Method:</span>
+                <div class="flex flex-wrap gap-x-4 gap-y-2">
+                  @for (method of schemaLiveVideoSigningMethods; track method) {
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'val-live-method-' + method"
+                        [checked]="selectedValidationLiveSigningMethods().has(method)"
+                        (change)="onValidationLiveSigningMethodChange(method, $event)"
+                        class="h-4 w-4 rounded border-gray-300 dark:border-slate-500 text-slate-600 dark:bg-slate-700 dark:checked:bg-slate-600 focus:ring-slate-500">
+                      <label [for]="'val-live-method-' + method" class="ml-2 text-xs text-slate-600 dark:text-slate-400 font-mono">{{ method }}</label>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
     </div>
+
+    <!-- Reset Button below all filters -->
+    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+        <button 
+          (click)="resetFilters()"
+          class="w-full sm:w-auto bg-slate-500 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 text-sm disabled:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 disabled:cursor-not-allowed"
+          [disabled]="!isAnyFilterActive()">
+          Reset Filters
+        </button>
+  </div>
 
   </div>
 
@@ -361,7 +597,15 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
             }
           </div>
           <p class="text-slate-600 dark:text-slate-300 font-medium mt-1">{{ group.vendorName }}</p>
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.organizationalUnit }}</p>
+          @if (group.organizationalUnit) {
+            <p class="text-sm text-slate-500 dark:text-slate-400">{{ group.organizationalUnit }}</p>
+          }
+          @if (group.infoURL; as link) {
+            <a [href]="link" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()" class="inline-flex items-center gap-1 mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+              <span>Product Info</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          }
           
           <div class="mt-3 flex flex-wrap gap-2">
             @for (status of group.statuses; track status) {
@@ -373,6 +617,12 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                   'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200': status !== 'conformant' && status !== 'revoked'
                 }">
                 {{ formatStatus(status) }}
+              </span>
+            }
+            @if (group.supportsLiveVideo) {
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 002-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <span>Live Video</span>
               </span>
             }
           </div>
@@ -430,7 +680,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent, NgIcon],
+  imports: [CommonModule, FormsModule, NgIconComponent],
   providers: [provideIcons({ heroInformationCircle, heroCog, heroCheckCircle, heroSquare2Stack })],
 })
 export class ProductListComponent {
@@ -450,6 +700,15 @@ export class ProductListComponent {
   selectedGenerationFormats = signal<Set<string>>(new Set());
   selectedValidationFormats = signal<Set<string>>(new Set());
   selectedStatus = signal('');
+  selectedSpecVersion = signal('');
+  selectedProgramVersion = signal('');
+  selectedGenerationLiveEncapsulations = signal<Set<string>>(new Set());
+  selectedGenerationLiveSigningMethods = signal<Set<string>>(new Set());
+  selectedValidationLiveEncapsulations = signal<Set<string>>(new Set());
+  selectedValidationLiveSigningMethods = signal<Set<string>>(new Set());
+
+  public readonly schemaLiveVideoEncapsulations = ['fMP4', 'CMAF'];
+  public readonly schemaLiveVideoSigningMethods = ['per-segment', 'verifiable-segment-info'];
 
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
@@ -532,54 +791,142 @@ export class ProductListComponent {
     }
   });
 
+  private clearGenerationLiveVideoEffect = effect(() => {
+    if (!this.selectedGenerationMediaTypes().has('liveVideo')) {
+      this.selectedGenerationLiveEncapsulations.set(new Set());
+      this.selectedGenerationLiveSigningMethods.set(new Set());
+    }
+  });
+
+  private clearValidationLiveVideoEffect = effect(() => {
+    if (!this.selectedValidationMediaTypes().has('liveVideo')) {
+      this.selectedValidationLiveEncapsulations.set(new Set());
+      this.selectedValidationLiveSigningMethods.set(new Set());
+    }
+  });
+
   // A list of all possible media types for the filter UI.
   public readonly mediaTypesForDisplay = [
     { key: 'image', label: 'Image' },
     { key: 'video', label: 'Video' },
+    { key: 'liveVideo', label: 'Live Video' },
     { key: 'audio', label: 'Audio' },
+    { key: 'textHtml', label: 'HTML Text' },
+    { key: 'textUnstructured', label: 'Unstructured Text' },
+    { key: 'textStructured', label: 'Structured Text' },
     { key: 'documents', label: 'Documents' },
     { key: 'fonts', label: 'Fonts' },
     { key: 'mlModel', label: 'ML Model' },
   ];
 
-  // Derived (computed) signals for UI elements and filtering
+  // Derived signals for UI elements and filtering
   vendors = computed(() => {
     const vendorNames = this.products().map(p => p.vendorName);
-    // Fix: Explicitly type sort callback parameters to resolve 'unknown' type error.
     return [...new Set(vendorNames)].sort((a: string, b: string) => a.localeCompare(b));
   });
 
-  productTypes = computed(() => {
-    const types = this.products().map(p => p.productType);
-    return [...new Set(types)].sort();
-  });
+  // Schema-defined enum options for filters
+  productTypes = signal<string[]>(['Generator', 'Validator']);
+  assuranceLevels = signal<string[]>(['Level 1', 'Level 2']);
+  statuses = signal<string[]>(['conformant', 'revoked', 'revoked_eol', 'revoked_vulnerability']);
+  specVersionsOptions = signal<string[]>(['2.2', '2.4']);
+  programVersionsOptions = signal<string[]>(['0.1', '0.2']);
 
-  assuranceLevels = computed(() => {
-    const levels = this.products().map(p => p.assuranceLevel);
-    // Fix: Explicitly type sort callback parameters to resolve 'unknown' type error.
-    return [...new Set(levels)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
-  });
+  // Schema-defined container formats & MIME types per media type
+  private readonly schemaFormatsByMediaType: Record<string, string[]> = {
+    image: [
+      'image/jpeg',
+      'image/jxl',
+      'image/png',
+      'image/svg+xml',
+      'image/gif',
+      'image/x-adobe-dng',
+      'image/tiff',
+      'image/webp',
+      'image/heic',
+      'image/heic-sequence',
+      'image/heif',
+      'image/heif-sequence',
+      'image/avif',
+      'image/x-tiff-based',
+      'image/x-riff-based',
+    ],
+    video: [
+      'video/x-msvideo',
+      'video/mp4',
+      'video/quicktime',
+      'video/x-bmff-based',
+      'video/x-riff-based',
+    ],
+    audio: [
+      'audio/flac',
+      'audio/MPA',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/aac',
+      'audio/mp4',
+      'audio/x-riff-based',
+    ],
+    textHtml: [
+      'text/html',
+    ],
+    textUnstructured: [
+      'text/csv',
+      'text/tab-separated-values',
+      'text/plain',
+    ],
+    textStructured: [
+      'text/markdown',
+      'text/xml',
+      'application/xml',
+      'application/xhtml+xml',
+    ],
+    documents: [
+      'application/pdf',
+      'application/epub+zip',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+      'application/vnd.oasis.opendocument.text',
+      'application/vnd.oasis.opendocument.spreadsheet',
+      'application/vnd.oasis.opendocument.presentation',
+      'application/vnd.oasis.opendocument.graphics',
+      'application/oxps',
+      'application/x-zip-based',
+    ],
+    fonts: [
+      'font/otf',
+    ],
+    mlModel: [
+      'jax',
+      'keras',
+      'ml_net',
+      'mxnet',
+      'onnx',
+      'openvivo.parameter',
+      'openvivo.topology',
+      'pytorch',
+      'tensorflow',
+      'numpy',
+      'protobuf',
+      'pickle',
+      'savedmodel',
+    ],
+  };
 
-  statuses = computed(() => {
-    const statuses = this.products().map(p => p.status);
-    return [...new Set(statuses)].sort();
-  });
-  
-  // This computed signal dynamically generates the list of available file formats
-  // based on the currently selected media types, ensuring only relevant formats are shown.
   availableGenerationFileFormats = computed(() => {
     const genMedia = this.selectedGenerationMediaTypes();
     if (genMedia.size === 0) {
       return [];
     }
     const formats = new Set<string>();
-    this.products().forEach(product => {
-      for (const mediaType of genMedia) {
-        if (product.generationFormats[mediaType]) {
-          product.generationFormats[mediaType].forEach(format => formats.add(format));
-        }
+    for (const mediaType of genMedia) {
+      const schemaFormats = this.schemaFormatsByMediaType[mediaType];
+      if (schemaFormats) {
+        schemaFormats.forEach(format => formats.add(format));
       }
-    });
+    }
     return Array.from(formats).sort();
   });
 
@@ -589,13 +936,12 @@ export class ProductListComponent {
       return [];
     }
     const formats = new Set<string>();
-    this.products().forEach(product => {
-      for (const mediaType of valMedia) {
-        if (product.validationFormats[mediaType]) {
-          product.validationFormats[mediaType].forEach(format => formats.add(format));
-        }
+    for (const mediaType of valMedia) {
+      const schemaFormats = this.schemaFormatsByMediaType[mediaType];
+      if (schemaFormats) {
+        schemaFormats.forEach(format => formats.add(format));
       }
-    });
+    }
     return Array.from(formats).sort();
   });
 
@@ -603,40 +949,56 @@ export class ProductListComponent {
     const vendor = this.selectedVendor();
     const type = this.selectedProductType();
     const level = this.selectedAssuranceLevel();
+    const specVer = this.selectedSpecVersion();
+    const progVer = this.selectedProgramVersion();
     const genMediaTypes = this.selectedGenerationMediaTypes();
     const valMediaTypes = this.selectedValidationMediaTypes();
     const genFormats = this.selectedGenerationFormats();
     const valFormats = this.selectedValidationFormats();
     const sort = this.sortOrder();
-    const term = this.searchTerm().toLowerCase();
+    const term = this.searchTerm().trim().toLowerCase();
     const status = this.selectedStatus();
 
+    const genLiveEncaps = this.selectedGenerationLiveEncapsulations();
+    const genLiveMethods = this.selectedGenerationLiveSigningMethods();
+    const valLiveEncaps = this.selectedValidationLiveEncapsulations();
+    const valLiveMethods = this.selectedValidationLiveSigningMethods();
+
+    const genMediaArr = genMediaTypes.size > 0 ? Array.from(genMediaTypes) : [];
+    const valMediaArr = valMediaTypes.size > 0 ? Array.from(valMediaTypes) : [];
+    const words = term.length > 0 ? term.split(/\s+/).filter(Boolean) : [];
+
     const filtered = this.products().filter(p => {
-      const vendorMatch = vendor === '' || p.vendorName === vendor;
-      const productTypeMatch = type === '' || p.productType === type;
-      const assuranceLevelMatch = level === '' || p.assuranceLevel === level;
-      const statusMatch = status === '' || p.status === status;
-      
-      const genMediaTypesMatch = genMediaTypes.size === 0 || p.generationMediaTypes.some(mt => genMediaTypes.has(mt));
-      const valMediaTypesMatch = valMediaTypes.size === 0 || p.validationMediaTypes.some(mt => valMediaTypes.has(mt));
-      
-      const genFormatsMatch = genFormats.size === 0 || 
-        Array.from(genMediaTypes).some(mt => p.generationFormats[mt]?.some(f => genFormats.has(f)));
-      const valFormatsMatch = valFormats.size === 0 || 
-        Array.from(valMediaTypes).some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)));
+      // 1. Scalar exact-match filters (short-circuiting early)
+      if (vendor !== '' && p.vendorName !== vendor) return false;
+      if (type !== '' && p.productType !== type) return false;
+      if (level !== '' && p.assuranceLevel !== level) return false;
+      if (status !== '' && p.status !== status) return false;
+      if (specVer !== '' && !p.specVersions?.includes(specVer)) return false;
+      if (progVer !== '' && p.conformanceProgramVersion !== progVer) return false;
 
-      // Advanced multi-word space-separated search term matching.
-      // Requiring each typed word to be found in at least one field of the product.
-      const words = term.split(/\s+/).filter(Boolean);
-      const searchTermMatch = words.length === 0 || words.every(word => 
-        Object.values(p).some(val => 
-          typeof val === 'string' && val.toLowerCase().includes(word)
-        ) ||
-        p.supportedMediaTypes.some(t => t.toLowerCase().includes(word)) ||
-        p.supportedFileFormats.some(format => format.toLowerCase().includes(word) || this.formatFileFormat(format).toLowerCase().includes(word))
-      );
+      // 2. Generation & Validation Media Types
+      if (genMediaTypes.size > 0 && !p.generationMediaTypes.some(mt => genMediaTypes.has(mt))) return false;
+      if (valMediaTypes.size > 0 && !p.validationMediaTypes.some(mt => valMediaTypes.has(mt))) return false;
 
-      return vendorMatch && productTypeMatch && assuranceLevelMatch && genMediaTypesMatch && valMediaTypesMatch && genFormatsMatch && valFormatsMatch && searchTermMatch && statusMatch;
+      // 3. Container Formats
+      if (genFormats.size > 0 && !genMediaArr.some(mt => p.generationFormats[mt]?.some(f => genFormats.has(f)))) return false;
+      if (valFormats.size > 0 && !valMediaArr.some(mt => p.validationFormats[mt]?.some(f => valFormats.has(f)))) return false;
+
+      // 4. Live Video Streaming Sub-filters
+      if (genLiveEncaps.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.generation && genLiveEncaps.has(e.type)))) return false;
+      if (genLiveMethods.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.generation && e.methods?.some(m => genLiveMethods.has(m))))) return false;
+      if (valLiveEncaps.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.validation && valLiveEncaps.has(e.type)))) return false;
+      if (valLiveMethods.size > 0 && !(p.liveVideo?.supported && p.liveVideo.encapsulations?.some(e => e.validation && e.methods?.some(m => valLiveMethods.has(m))))) return false;
+
+      // 5. Pre-indexed search blob check (O(N*W) simple string search)
+      if (words.length > 0) {
+        for (let i = 0; i < words.length; i++) {
+          if (!p.searchBlob.includes(words[i])) return false;
+        }
+      }
+
+      return true;
     });
 
     // Sort the filtered results
@@ -681,12 +1043,14 @@ export class ProductListComponent {
         vendorName: first.vendorName,
         productName: first.productName,
         organizationalUnit: first.organizationalUnit,
+        infoURL: first.infoURL || records.find(r => r.infoURL)?.infoURL,
         records: records,
         latestConformanceDate: first.conformanceDate, // The first record is now the latest due to sorting
         statuses: [...new Set(records.map(p => p.status))],
         productTypes: [...new Set(records.map(p => p.productType))],
         assuranceLevel: first.assuranceLevel,
         assuranceLevelValue: first.assuranceLevelValue,
+        supportsLiveVideo: records.some(r => r.liveVideo?.supported === true),
       } as GroupedProduct;
     });
 
@@ -712,10 +1076,16 @@ export class ProductListComponent {
            this.selectedProductType() !== '' || 
            this.selectedAssuranceLevel() !== '' || 
            this.selectedStatus() !== '' ||
+           this.selectedSpecVersion() !== '' ||
+           this.selectedProgramVersion() !== '' ||
            this.selectedGenerationMediaTypes().size > 0 ||
            this.selectedValidationMediaTypes().size > 0 ||
            this.selectedGenerationFormats().size > 0 ||
            this.selectedValidationFormats().size > 0 ||
+           this.selectedGenerationLiveEncapsulations().size > 0 ||
+           this.selectedGenerationLiveSigningMethods().size > 0 ||
+           this.selectedValidationLiveEncapsulations().size > 0 ||
+           this.selectedValidationLiveSigningMethods().size > 0 ||
            this.searchTerm() !== '';
   });
 
@@ -734,6 +1104,14 @@ export class ProductListComponent {
 
   onStatusChange(value: string): void {
     this.selectedStatus.set(value);
+  }
+
+  onSpecVersionChange(value: string): void {
+    this.selectedSpecVersion.set(value);
+  }
+
+  onProgramVersionChange(value: string): void {
+    this.selectedProgramVersion.set(value);
   }
 
   onSearchTermChange(value: string): void {
@@ -796,24 +1174,73 @@ export class ProductListComponent {
     });
   }
 
+  onGenerationLiveEncapChange(encap: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedGenerationLiveEncapsulations.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(encap); else set.delete(encap);
+      return set;
+    });
+  }
+
+  onGenerationLiveSigningMethodChange(method: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedGenerationLiveSigningMethods.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(method); else set.delete(method);
+      return set;
+    });
+  }
+
+  onValidationLiveEncapChange(encap: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedValidationLiveEncapsulations.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(encap); else set.delete(encap);
+      return set;
+    });
+  }
+
+  onValidationLiveSigningMethodChange(method: string, event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    this.selectedValidationLiveSigningMethods.update(current => {
+      const set = new Set(current);
+      if (isChecked) set.add(method); else set.delete(method);
+      return set;
+    });
+  }
+
   resetFilters(): void {
     this.selectedVendor.set('');
     this.selectedProductType.set('');
     this.selectedAssuranceLevel.set('');
     this.selectedStatus.set('');
+    this.selectedSpecVersion.set('');
+    this.selectedProgramVersion.set('');
     this.searchTerm.set('');
     this.sortOrder.set('conformanceDateDesc');
     this.selectedGenerationMediaTypes.set(new Set());
     this.selectedValidationMediaTypes.set(new Set());
     this.selectedGenerationFormats.set(new Set());
     this.selectedValidationFormats.set(new Set());
+    this.selectedGenerationLiveEncapsulations.set(new Set());
+    this.selectedGenerationLiveSigningMethods.set(new Set());
+    this.selectedValidationLiveEncapsulations.set(new Set());
+    this.selectedValidationLiveSigningMethods.set(new Set());
   }
+
+  private readonly statusCache = new Map<string, string>();
+  private readonly mediaTypeCache = new Map<string, string>();
+  private readonly signalNameCache = new Map<string, string>();
+  private readonly fileFormatCache = new Map<string, string>();
 
   formatStatus(status: string): string {
     if (!status) {
       return '';
     }
-    return status
+    let cached = this.statusCache.get(status);
+    if (cached !== undefined) return cached;
+    cached = status
       .split('_')
       .map(word => {
         if (word.toLowerCase() === 'eol') {
@@ -822,10 +1249,58 @@ export class ProductListComponent {
         return word.charAt(0).toUpperCase() + word.slice(1);
       })
       .join(' - ');
+    this.statusCache.set(status, cached);
+    return cached;
+  }
+
+  formatMediaType(mediaType: string): string {
+    let cached = this.mediaTypeCache.get(mediaType);
+    if (cached !== undefined) return cached;
+    const labels: Record<string, string> = {
+      image: 'Image',
+      video: 'Video',
+      liveVideo: 'Live Video',
+      audio: 'Audio',
+      textHtml: 'HTML Text',
+      textUnstructured: 'Unstructured Text',
+      textStructured: 'Structured Text',
+      documents: 'Documents',
+      fonts: 'Fonts',
+      mlModel: 'ML Model',
+    };
+    cached = labels[mediaType] || mediaType;
+    this.mediaTypeCache.set(mediaType, cached);
+    return cached;
+  }
+
+  hasDisallowedSignals(product: Product): boolean {
+    if (!product.disallowedSignals) return false;
+    const inc = product.disallowedSignals.inception || [];
+    const trans = product.disallowedSignals.transformation || [];
+    return inc.length > 0 || trans.length > 0;
+  }
+
+  getDisallowedSignalsList(product: Product): string[] {
+    if (!product.disallowedSignals) return [];
+    const inc = product.disallowedSignals.inception || [];
+    const trans = product.disallowedSignals.transformation || [];
+    return [...inc, ...trans];
+  }
+
+  formatSignalName(signal: string): string {
+    let cached = this.signalNameCache.get(signal);
+    if (cached !== undefined) return cached;
+    cached = signal
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+    this.signalNameCache.set(signal, cached);
+    return cached;
   }
 
   formatFileFormat(format: string): string {
     if (!format) return '';
+    let cached = this.fileFormatCache.get(format);
+    if (cached !== undefined) return cached;
 
     const mapping: Record<string, string> = {
       // Image
@@ -893,19 +1368,20 @@ export class ProductListComponent {
       'font/otf': 'otf',
     };
 
+    let res = format;
     if (mapping[format]) {
-      return mapping[format];
-    }
-
-    if (format.includes('/')) {
+      res = mapping[format];
+    } else if (format.includes('/')) {
       const subtype = format.split('/')[1];
       if (subtype.startsWith('x-')) {
-        return subtype.substring(2);
+        res = subtype.substring(2);
+      } else {
+        res = subtype;
       }
-      return subtype;
     }
 
-    return format;
+    this.fileFormatCache.set(format, res);
+    return res;
   }
 
   // Modal logic
@@ -923,5 +1399,25 @@ export class ProductListComponent {
       return colors[level - 1];
     }
     return 'bg-slate-300 dark:bg-slate-600';
+  }
+
+  copiedRecordId = signal<string | null>(null);
+
+  copyRecordJson(product: Product): void {
+    const jsonContent = product.raw
+      ? JSON.stringify(product.raw, null, 2)
+      : JSON.stringify(product, null, 2);
+
+    navigator.clipboard
+      .writeText(jsonContent)
+      .then(() => {
+        this.copiedRecordId.set(product.recordId);
+        setTimeout(() => {
+          if (this.copiedRecordId() === product.recordId) {
+            this.copiedRecordId.set(null);
+          }
+        }, 2000);
+      })
+      .catch(err => console.error('Failed to copy record JSON:', err));
   }
 }
