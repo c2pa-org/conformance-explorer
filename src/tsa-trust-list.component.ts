@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TsaTrustListService } from './services/tsa-trust-list.service';
 import { Certificate } from './models/certificate.model';
@@ -204,6 +204,17 @@ import { X509Certificate, SubjectKeyIdentifierExtension, AuthorityKeyIdentifierE
 })
 export class TsaTrustListComponent {
   private tsaTrustListService = inject(TsaTrustListService);
+  private platformId = inject(PLATFORM_ID);
+
+  private lockScrollEffect = effect(() => {
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.selectedCertificate()) {
+        document.body.classList.add('overflow-hidden');
+      } else {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+  });
 
   certificates = this.tsaTrustListService.certificates;
   selectedOrganization = signal('');

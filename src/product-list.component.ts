@@ -687,6 +687,16 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
 export class ProductListComponent {
   private dataService = inject(DataService);
 
+  private lockScrollEffect = effect(() => {
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.selectedGroup()) {
+        document.body.classList.add('overflow-hidden');
+      } else {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+  });
+
   // Raw data signals
   products = this.dataService.products;
 
