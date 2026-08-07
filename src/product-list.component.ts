@@ -68,7 +68,6 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
                   }">
                   {{ formatStatus(product.status) }}
                 </span>
-                <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-md">{{ product.productType }}</span>
               </div>
             </div>
             
