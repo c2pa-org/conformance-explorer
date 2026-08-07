@@ -412,16 +412,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 --------------------------------------------------------------------------------
-Package: @ng-icons/core
-License: "MIT"
-
-
---------------------------------------------------------------------------------
-Package: @ng-icons/heroicons
-License: "MIT"
-
-
---------------------------------------------------------------------------------
 Package: @peculiar/x509
 License: "MIT"
 

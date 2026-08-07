@@ -41,3 +41,30 @@ select {
 #sort-order {
   padding-right: 3.5rem;
 }
+
+/* Ensure inline SVGs and ng-icons do not blow up in flex/grid containers */
+svg, ng-icon {
+  flex-shrink: 0;
+}
+
+svg.w-3\.5, ng-icon.w-3\.5 {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+  max-width: 0.875rem !important;
+  max-height: 0.875rem !important;
+}
+
+svg.w-4, ng-icon.w-4 {
+  width: 1rem !important;
+  height: 1rem !important;
+  max-width: 1rem !important;
+  max-height: 1rem !important;
+}
+
+svg.w-6, ng-icon.w-6 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  max-width: 1.5rem !important;
+  max-height: 1.5rem !important;
+}
+
