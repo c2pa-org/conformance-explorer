@@ -38,13 +38,31 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
       
       <div class="flex-grow overflow-y-auto p-6 space-y-8">
         @for (product of selectedGroup()?.records; track product.recordId) {
-          <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+          <div
+            [id]="'record-' + product.recordId"
+            class="border rounded-xl overflow-hidden transition-colors duration-500"
+            [class.border-slate-200]="highlightedRecordId() !== product.recordId"
+            [class.dark:border-slate-700]="highlightedRecordId() !== product.recordId"
+            [class.border-blue-400]="highlightedRecordId() === product.recordId"
+            [class.dark:border-blue-500]="highlightedRecordId() === product.recordId"
+            [class.ring-2]="highlightedRecordId() === product.recordId"
+            [class.ring-blue-200]="highlightedRecordId() === product.recordId"
+            [class.dark:ring-blue-900]="highlightedRecordId() === product.recordId">
             <div class="bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4">
               <div class="flex flex-col">
                 <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Record ID</span>
                 <span class="text-sm font-mono text-slate-700 dark:text-slate-300">{{ product.recordId }}</span>
               </div>
               <div class="flex items-center gap-3">
+                <button
+                  (click)="copyRecordLink(product)"
+                  [title]="copiedLinkRecordId() === product.recordId ? 'Link Copied!' : 'Copy a direct link to this record'"
+                  class="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-1.5 px-3 rounded-md transition-colors flex items-center gap-1.5 shadow-sm">
+                  <svg width="14" height="14" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px;" class="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                  </svg>
+                  <span>{{ copiedLinkRecordId() === product.recordId ? 'Copied Link!' : 'Copy Link' }}</span>
+                </button>
                 <button
                   (click)="copyRecordJson(product)"
                   [title]="copiedRecordId() === product.recordId ? 'JSON Copied!' : 'Copy Conforming Product List Record JSON'"
@@ -719,6 +737,17 @@ export class ProductListComponent {
   // Modal signal
   selectedGroup = signal<GroupedProduct | null>(null);
 
+  // Record targeted by a ?record= deep link, used to highlight and scroll to it.
+  highlightedRecordId = signal<string | null>(null);
+
+  // Deep-linked record id (lowercased). Participates in filteredProducts() as an
+  // AND predicate like every other URL filter, so ?o=X&record=Y matches only
+  // records satisfying both.
+  deepLinkRecordId = signal<string | null>(null);
+
+  // Canonical deep-link key first; 'recordId' accepted as an alias.
+  private static readonly RECORD_PARAM_KEYS = ['record', 'recordId'];
+
   private platformId = inject(PLATFORM_ID);
 
   private urlParamsProcessed = false;
@@ -779,6 +808,18 @@ export class ProductListComponent {
       if (searchParts.length > 0) {
         this.searchTerm.set(searchParts.join(' '));
       }
+
+      // 6. Map 'record' (or 'recordId') -> filter to that CPL record and open its
+      // modal. ANDed with the other URL filters; if they exclude the record, the
+      // grid shows 0 results and no modal opens.
+      const recordId = ProductListComponent.RECORD_PARAM_KEYS
+        .map(key => getParam(key))
+        .find((value): value is string => !!value);
+      if (recordId) {
+        this.openRecordById(recordId, { updateUrl: false });
+      }
+
+      this.registerPopStateListener();
 
       this.urlParamsProcessed = true;
     }
@@ -964,6 +1005,7 @@ export class ProductListComponent {
     const sort = this.sortOrder();
     const term = this.searchTerm().trim().toLowerCase();
     const status = this.selectedStatus();
+    const record = this.deepLinkRecordId();
 
     const genLiveEncaps = this.selectedGenerationLiveEncapsulations();
     const genLiveMethods = this.selectedGenerationLiveSigningMethods();
@@ -975,6 +1017,9 @@ export class ProductListComponent {
     const words = term.length > 0 ? term.split(/\s+/).filter(Boolean) : [];
 
     const filtered = this.products().filter(p => {
+      // 0. Deep-linked record id (case-insensitive exact match)
+      if (record && p.recordId.toLowerCase() !== record) return false;
+
       // 1. Scalar exact-match filters (short-circuiting early)
       if (vendor !== '' && p.vendorName !== vendor) return false;
       if (type !== '' && p.productType !== type) return false;
@@ -1040,25 +1085,7 @@ export class ProductListComponent {
       groups.get(dn)!.push(p);
     });
     
-    const mappedGroups = Array.from(groups.entries()).map(([dn, records]) => {
-      // Sort records by conformanceDate (newest first)
-      records.sort((a, b) => new Date(b.conformanceDate).getTime() - new Date(a.conformanceDate).getTime());
-      const first = records[0];
-      return {
-        distinguishedName: dn,
-        vendorName: first.vendorName,
-        productName: first.productName,
-        organizationalUnit: first.organizationalUnit,
-        infoURL: first.infoURL || records.find(r => r.infoURL)?.infoURL,
-        records: records,
-        latestConformanceDate: first.conformanceDate, // The first record is now the latest due to sorting
-        statuses: [...new Set(records.map(p => p.status))],
-        productTypes: [...new Set(records.map(p => p.productType))],
-        assuranceLevel: first.assuranceLevel,
-        assuranceLevelValue: first.assuranceLevelValue,
-        supportsLiveVideo: records.some(r => r.liveVideo?.supported === true),
-      } as GroupedProduct;
-    });
+    const mappedGroups = Array.from(groups.entries()).map(([dn, records]) => this.buildGroup(dn, records));
 
     const sort = this.sortOrder();
     return mappedGroups.sort((a, b) => {
@@ -1092,7 +1119,8 @@ export class ProductListComponent {
            this.selectedGenerationLiveSigningMethods().size > 0 ||
            this.selectedValidationLiveEncapsulations().size > 0 ||
            this.selectedValidationLiveSigningMethods().size > 0 ||
-           this.searchTerm() !== '';
+           this.searchTerm() !== '' ||
+           this.deepLinkRecordId() !== null;
   });
 
   // Event handlers
@@ -1233,6 +1261,8 @@ export class ProductListComponent {
     this.selectedGenerationLiveSigningMethods.set(new Set());
     this.selectedValidationLiveEncapsulations.set(new Set());
     this.selectedValidationLiveSigningMethods.set(new Set());
+    this.deepLinkRecordId.set(null);
+    this.writeRecordParam(null);
   }
 
   private readonly statusCache = new Map<string, string>();
@@ -1400,13 +1430,43 @@ export class ProductListComponent {
     return res;
   }
 
+  // Builds a GroupedProduct from a set of records sharing a distinguished name.
+  // Shared by the filtered results grid and by deep-link resolution, so a linked
+  // record renders identically whether or not it survives the active filters.
+  private buildGroup(dn: string, records: Product[]): GroupedProduct {
+    // Sort records by conformanceDate (newest first)
+    const sorted = [...records].sort(
+      (a, b) => new Date(b.conformanceDate).getTime() - new Date(a.conformanceDate).getTime()
+    );
+    const first = sorted[0];
+    return {
+      distinguishedName: dn,
+      vendorName: first.vendorName,
+      productName: first.productName,
+      organizationalUnit: first.organizationalUnit,
+      infoURL: first.infoURL || sorted.find(r => r.infoURL)?.infoURL,
+      records: sorted,
+      latestConformanceDate: first.conformanceDate, // The first record is now the latest due to sorting
+      statuses: [...new Set(sorted.map(p => p.status))],
+      productTypes: [...new Set(sorted.map(p => p.productType))],
+      assuranceLevel: first.assuranceLevel,
+      assuranceLevelValue: first.assuranceLevelValue,
+      supportsLiveVideo: sorted.some(r => r.liveVideo?.supported === true),
+    } as GroupedProduct;
+  }
+
   // Modal logic
   selectGroup(group: GroupedProduct): void {
     this.selectedGroup.set(group);
+    // Anchor the shareable link to the group's newest record.
+    this.writeRecordParam(group.records[0]?.recordId ?? null);
   }
 
   closeModal(): void {
     this.selectedGroup.set(null);
+    this.highlightedRecordId.set(null);
+    this.deepLinkRecordId.set(null);
+    this.writeRecordParam(null);
   }
 
   getAssuranceDotClass(level: number, index: number): string {
@@ -1415,6 +1475,108 @@ export class ProductListComponent {
       return colors[level - 1];
     }
     return 'bg-slate-300 dark:bg-slate-600';
+  }
+
+  // Applies `recordId` as a filter predicate (ANDed with all active filters, matched
+  // case-insensitively) and opens its modal only when the record survives them.
+  // Otherwise the grid shows the standard 0-results state and no modal opens.
+  openRecordById(recordId: string, options: { updateUrl: boolean } = { updateUrl: true }): boolean {
+    const target = recordId.trim().toLowerCase();
+    if (!target) return false;
+
+    this.deepLinkRecordId.set(target);
+
+    const match = this.filteredProducts().find(p => p.recordId.toLowerCase() === target);
+    if (!match) {
+      this.selectedGroup.set(null);
+      this.highlightedRecordId.set(null);
+      return false;
+    }
+
+    this.selectedGroup.set(this.buildGroup(match.distinguishedName, [match]));
+    this.highlightedRecordId.set(match.recordId);
+
+    if (options.updateUrl) {
+      this.writeRecordParam(match.recordId);
+    }
+    this.scrollToRecord(match.recordId);
+    return true;
+  }
+
+  // Adds or removes the record param without reloading. Uses a query param rather
+  // than a path segment so direct links resolve on static hosting (GitHub Pages)
+  // with no 404 fallback required.
+  private writeRecordParam(recordId: string | null): void {
+    if (!isPlatformBrowser(this.platformId) || typeof history === 'undefined') return;
+
+    const url = new URL(window.location.href);
+    const previous = url.searchParams.get('record');
+    ProductListComponent.RECORD_PARAM_KEYS.forEach(key => url.searchParams.delete(key));
+
+    if (recordId) {
+      url.searchParams.set('record', recordId);
+    }
+    if (url.href === window.location.href) return;
+
+    // Opening a record is a navigable step (Back closes it); clearing it is not.
+    if (recordId && !previous) {
+      history.pushState({ record: recordId }, '', url.href);
+    } else {
+      history.replaceState({ record: recordId }, '', url.href);
+    }
+  }
+
+  private popStateBound = false;
+
+  private registerPopStateListener(): void {
+    if (!isPlatformBrowser(this.platformId) || this.popStateBound) return;
+    this.popStateBound = true;
+
+    window.addEventListener('popstate', () => {
+      const url = new URL(window.location.href);
+      const recordId = ProductListComponent.RECORD_PARAM_KEYS
+        .map(key => url.searchParams.get(key))
+        .find((value): value is string => !!value);
+
+      if (recordId) {
+        this.openRecordById(recordId, { updateUrl: false });
+      } else {
+        this.selectedGroup.set(null);
+        this.highlightedRecordId.set(null);
+        this.deepLinkRecordId.set(null);
+      }
+    });
+  }
+
+  private scrollToRecord(recordId: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    // Defer until the modal has rendered its records.
+    setTimeout(() => {
+      const el = document.getElementById(`record-${recordId}`);
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 0);
+  }
+
+  copiedLinkRecordId = signal<string | null>(null);
+
+  copyRecordLink(product: Product): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // Clean canonical link: just origin + path + record, no session filter params.
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('record', product.recordId);
+
+    navigator.clipboard
+      .writeText(url.href)
+      .then(() => {
+        this.copiedLinkRecordId.set(product.recordId);
+        setTimeout(() => {
+          if (this.copiedLinkRecordId() === product.recordId) {
+            this.copiedLinkRecordId.set(null);
+          }
+        }, 2000);
+      })
+      .catch(err => console.error('Failed to copy record link:', err));
   }
 
   copiedRecordId = signal<string | null>(null);
