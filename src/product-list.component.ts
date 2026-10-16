@@ -559,7 +559,7 @@ type SortKey = 'conformanceDateDesc' | 'conformanceDateAsc' | 'creationDateDesc'
   <!-- Results Count & Sorting -->
   <div class="flex justify-between items-center my-4">
     <div class="text-sm text-slate-600 dark:text-slate-400">
-      Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ groupedProducts().length }}</span> products (from <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredProducts().length }}</span> matching records).
+      Showing <span class="font-semibold text-slate-700 dark:text-slate-200">{{ groupedProducts().length }}</span> products from <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredVendorsCount() }}</span> vendors (<span class="font-semibold text-slate-700 dark:text-slate-200">{{ filteredProducts().length }}</span> matching records).
     </div>
     <div class="flex items-center">
         <label for="sort-order" class="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2 whitespace-nowrap">Sort results by</label>
@@ -1075,6 +1075,10 @@ export class ProductListComponent {
           return 0;
       }
     });
+  });
+
+  filteredVendorsCount = computed(() => {
+    return new Set(this.groupedProducts().map(g => g.vendorName)).size;
   });
 
   isAnyFilterActive = computed(() => {
