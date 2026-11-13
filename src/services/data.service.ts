@@ -122,6 +122,9 @@ export class DataService {
       }
 
       const searchBlob = [
+        p.recordId,
+        `urn:uuid:${p.recordId}`,
+        `urn:c2pa:${p.recordId}`,
         p.applicant,
         p.product.DN.CN,
         p.product.DN.OU || '',

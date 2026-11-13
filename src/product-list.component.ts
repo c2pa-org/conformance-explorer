@@ -764,17 +764,19 @@ export class ProductListComponent {
         if (matchedLevel) this.selectedAssuranceLevel.set(matchedLevel);
       }
 
-      // 5. Direct all specific X.509 fields (cn, ou, c) and generic search (q) -> main Search Term
+      // 5. Direct all specific X.509 fields (cn, ou, c), record identifiers (recordId, record, urn), and generic search (q) -> main Search Term
       const q = getParam('q');
       const cn = getParam('cn');
       const ou = getParam('ou');
       const c = getParam('c');
+      const recordId = getParam('recordId') || getParam('record') || getParam('urn');
 
       const searchParts = [];
       if (q) searchParts.push(q);
       if (cn) searchParts.push(cn);
       if (ou) searchParts.push(ou);
       if (c) searchParts.push(c);
+      if (recordId) searchParts.push(recordId);
 
       if (searchParts.length > 0) {
         this.searchTerm.set(searchParts.join(' '));
